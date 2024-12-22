@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/dry/desktop/cpp/dcompiler/bin",
+  "command": "/usr/bin/c++  -I/home/dry/desktop/cpp/dcompiler/headers  -o CMakeFiles/eggo.dir/src/eggo.cpp.o -c /home/dry/desktop/cpp/dcompiler/src/eggo.cpp -std=c++17 -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include",
+  "file": "/home/dry/desktop/cpp/dcompiler/src/eggo.cpp",
+  "output": "CMakeFiles/eggo.dir/src/eggo.cpp.o"
+}
+]

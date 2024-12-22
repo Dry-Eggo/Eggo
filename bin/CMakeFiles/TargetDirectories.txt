@@ -1,0 +1,3 @@
+/home/dry/desktop/cpp/dcompiler/bin/CMakeFiles/eggo.dir
+/home/dry/desktop/cpp/dcompiler/bin/CMakeFiles/edit_cache.dir
+/home/dry/desktop/cpp/dcompiler/bin/CMakeFiles/rebuild_cache.dir

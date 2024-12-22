@@ -1,0 +1,21 @@
+# 
+
+  this is a block comment. it is ignored until an exclamation symbol is reached 
+  it can be extended to multiple lines
+
+!
+
+mk compiler_name : str = "Eggo"; #! the mk keyword is used to declare or define variables
+
+mkf foo() 
+{
+
+  #! mkf is a variant of the mk keyword that is used for functions
+  # ----------- do something ------------ !
+
+};
+
+foo();    #! call this function to do something
+
+#! this line is a comment. will be ignored by compiler
+

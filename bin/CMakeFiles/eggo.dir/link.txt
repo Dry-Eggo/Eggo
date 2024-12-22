@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/eggo.dir/src/eggo.cpp.o -o eggo 

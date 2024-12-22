@@ -1,0 +1,32 @@
+
+mk name : str = "Abdul";
+mk age : int = 30;
+
+mk age = name;
+
+mkf exitf(code : int)
+{
+  call std_terminate_process;
+};
+
+#! Hello This is a comment
+
+mkf println(msg : str)
+{
+  call std_print_string;
+  call std_flush;
+};
+
+mkf print(msg : str)
+{
+  call std_print_string;
+};
+
+print(name);
+exitf(30);
+
+for(i : int = 0; i < 10; i+=1)
+{
+  print(name);
+};
+
