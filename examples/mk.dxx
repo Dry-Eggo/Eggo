@@ -1,0 +1,11 @@
+mkf terminate(code : int)
+{
+  call std_terminate_process
+}
+
+mkf main()
+{
+  
+  terminate(40);
+  
+};

@@ -153,10 +153,12 @@ private:
           consume();
           while (peek().value() != '\n') {
             consume();
-          } 
+          }
         } else {
           while (peek().value() != '!') {
             consume();
+            if(peek().value() == '\n')
+              cuurLine++;
           }
           consume();
         }
@@ -237,7 +239,8 @@ private:
         consume();
       }      
     }
-
+    
+    tokens.push_back({.type = TokenType::eof, .line = cuurLine});
     Logger::Info("Token Size : %d", tokens.size());
     Parser parse(tokens);
 

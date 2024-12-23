@@ -25,7 +25,7 @@ enum TokenType
     IDENT, EXIT, MK, ASSIGN, STRING_LIT,
     TYPE_DEC, TYPE, FOR, ADD_EQU, LTH,
     CBRACE, OBRACE, GTH, LTH_EQU, GTH_EQU,
-    FUNC, CALL,
+    FUNC, CALL, eof,
 
 };
 

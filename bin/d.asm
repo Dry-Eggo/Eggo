@@ -3,8 +3,6 @@ section .bss
 
 section .data
 
-	compiler_name db "Eggo", 0
-
 section .text
 global _start
 
@@ -18,15 +16,27 @@ _start:
 
 
 	mov rbp, rsp
-
-	call foo
+	call main
 
 	mov rdi, 0
 	call std_terminate_process
 
-foo:
+terminate:
 
 	mov rbp, rsp
+
+	mov [rbp -8], rdi
+
+	call std_terminate_process
+	ret
+
+main:
+
+	mov rbp, rsp
+
+	mov rdi, 40
+
+	call terminate
 	ret
 
 section .note.GNU-stack

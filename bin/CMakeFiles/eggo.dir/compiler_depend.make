@@ -10,10 +10,8 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
-  /usr/include/c++/13/algorithm \
   /usr/include/c++/13/backward/binders.h \
   /usr/include/c++/13/bit \
-  /usr/include/c++/13/bits/algorithmfwd.h \
   /usr/include/c++/13/bits/alloc_traits.h \
   /usr/include/c++/13/bits/allocated_ptr.h \
   /usr/include/c++/13/bits/allocator.h \
@@ -73,12 +71,10 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
   /usr/include/c++/13/bits/shared_ptr_base.h \
   /usr/include/c++/13/bits/sstream.tcc \
   /usr/include/c++/13/bits/std_abs.h \
-  /usr/include/c++/13/bits/stl_algo.h \
   /usr/include/c++/13/bits/stl_algobase.h \
   /usr/include/c++/13/bits/stl_bvector.h \
   /usr/include/c++/13/bits/stl_construct.h \
   /usr/include/c++/13/bits/stl_function.h \
-  /usr/include/c++/13/bits/stl_heap.h \
   /usr/include/c++/13/bits/stl_iterator.h \
   /usr/include/c++/13/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/13/bits/stl_iterator_base_types.h \
@@ -86,7 +82,6 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
   /usr/include/c++/13/bits/stl_multimap.h \
   /usr/include/c++/13/bits/stl_pair.h \
   /usr/include/c++/13/bits/stl_relops.h \
-  /usr/include/c++/13/bits/stl_tempbuf.h \
   /usr/include/c++/13/bits/stl_tree.h \
   /usr/include/c++/13/bits/stl_uninitialized.h \
   /usr/include/c++/13/bits/stl_vector.h \
@@ -94,7 +89,6 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
   /usr/include/c++/13/bits/streambuf_iterator.h \
   /usr/include/c++/13/bits/string_view.tcc \
   /usr/include/c++/13/bits/stringfwd.h \
-  /usr/include/c++/13/bits/uniform_int_dist.h \
   /usr/include/c++/13/bits/unique_ptr.h \
   /usr/include/c++/13/bits/uses_allocator.h \
   /usr/include/c++/13/bits/uses_allocator_args.h \
@@ -136,8 +130,6 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
   /usr/include/c++/13/new \
   /usr/include/c++/13/optional \
   /usr/include/c++/13/ostream \
-  /usr/include/c++/13/pstl/execution_defs.h \
-  /usr/include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
   /usr/include/c++/13/ratio \
   /usr/include/c++/13/sstream \
@@ -287,6 +279,8 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
@@ -399,13 +393,9 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/pstl/pstl_config.h:
 
-/usr/include/c++/13/limits:
-
-/usr/include/c++/13/istream:
-
-/usr/include/c++/13/iostream:
-
 /usr/include/c++/13/ios:
+
+/usr/include/c++/13/bits/parse_numbers.h:
 
 /usr/include/wchar.h:
 
@@ -431,57 +421,37 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/ios_base.h:
 
+/usr/include/c++/13/bits/hash_bytes.h:
+
+/usr/include/asm-generic/errno-base.h:
+
+/usr/include/c++/13/limits:
+
 /usr/include/time.h:
 
 /usr/include/c++/13/bits/memoryfwd.h:
 
 /usr/include/c++/13/bits/fs_fwd.h:
 
+/usr/include/c++/13/bits/ostream_insert.h:
+
 /usr/include/c++/13/bits/nested_exception.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h:
 
-/usr/include/c++/13/pstl/execution_defs.h:
-
 /usr/include/c++/13/bits/basic_ios.tcc:
 
-/usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
+/usr/include/c++/13/new:
 
-/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+/usr/include/c++/13/ext/alloc_traits.h:
 
-/usr/include/c++/13/streambuf:
+/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
-/usr/include/c++/13/bits/exception.h:
+/usr/include/linux/errno.h:
 
-/usr/include/c++/13/typeinfo:
-
-/usr/include/c++/13/bits/cxxabi_init_exception.h:
-
-/usr/include/c++/13/bits/hash_bytes.h:
-
-/usr/include/asm-generic/errno-base.h:
-
-/usr/include/c++/13/algorithm:
-
-/usr/include/c++/13/bits/fstream.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
-
-/usr/include/c++/13/map:
-
-/usr/include/c++/13/bits/refwrap.h:
-
-/usr/include/alloca.h:
-
-/usr/include/c++/13/bits/locale_conv.h:
+/home/dry/desktop/cpp/dcompiler/headers/eggoLog.hpp:
 
 /usr/include/c++/13/cwchar:
-
-/usr/include/x86_64-linux-gnu/bits/time64.h:
-
-/usr/include/c++/13/bits/basic_ios.h:
-
-/usr/include/c++/13/bits/shared_ptr_base.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
@@ -503,6 +473,10 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/erase_if.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
+
+/usr/include/c++/13/cstddef:
+
 /usr/include/c++/13/bits/node_handle.h:
 
 /home/dry/desktop/cpp/dcompiler/headers/lexer.hpp:
@@ -515,55 +489,39 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/stl_iterator.h:
 
-/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
-
-/usr/include/linux/errno.h:
-
-/home/dry/desktop/cpp/dcompiler/headers/eggoLog.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
-
-/usr/include/c++/13/cstddef:
-
-/usr/include/c++/13/bits/stl_algo.h:
-
-/usr/include/c++/13/bits/algorithmfwd.h:
-
-/usr/include/c++/13/bits/concept_check.h:
-
-/usr/include/c++/13/bits/alloc_traits.h:
-
-/usr/include/c++/13/new:
-
-/usr/include/c++/13/ext/alloc_traits.h:
-
-/usr/include/c++/13/bits/basic_string.tcc:
-
-/usr/include/c++/13/bit:
-
-/usr/include/c++/13/bits/enable_special_members.h:
-
-/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
-
-/usr/include/locale.h:
-
-/usr/include/c++/13/ext/aligned_buffer.h:
-
 /usr/include/c++/13/bits/localefwd.h:
 
 /usr/include/c++/13/bits/exception_defines.h:
 
 /usr/include/c++/13/bits/locale_facets.h:
 
+/usr/include/alloca.h:
+
+/usr/include/c++/13/bit:
+
+/usr/include/c++/13/bits/basic_string.tcc:
+
+/usr/include/c++/13/bits/enable_special_members.h:
+
 /usr/include/c++/13/backward/binders.h:
+
+/usr/include/c++/13/bits/stringfwd.h:
 
 /usr/include/c++/13/bits/codecvt.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
-/usr/include/c++/13/bits/stl_tempbuf.h:
-
 /usr/include/c++/13/bits/stl_vector.h:
+
+/usr/include/x86_64-linux-gnu/bits/time64.h:
+
+/usr/include/c++/13/bits/basic_ios.h:
+
+/usr/include/c++/13/bits/shared_ptr_base.h:
+
+/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
+
+/usr/include/locale.h:
+
+/usr/include/c++/13/ext/aligned_buffer.h:
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
@@ -583,6 +541,14 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/istream.tcc:
 
+/usr/include/c++/13/bits/fstream.tcc:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/c++/13/bits/alloc_traits.h:
+
+/usr/include/c++/13/bits/concept_check.h:
+
 /usr/include/c++/13/bits/locale_classes.h:
 
 /usr/include/c++/13/bits/fs_ops.h:
@@ -594,6 +560,18 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 /usr/include/c++/13/filesystem:
 
 /usr/include/c++/13/bits/chrono.h:
+
+/usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+
+/usr/include/c++/13/streambuf:
+
+/usr/include/c++/13/bits/exception.h:
+
+/usr/include/c++/13/typeinfo:
+
+/usr/include/c++/13/bits/cxxabi_init_exception.h:
 
 /usr/include/c++/13/bits/move.h:
 
@@ -607,15 +585,9 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/streambuf_iterator.h:
 
-/usr/include/c++/13/bits/cxxabi_forced.h:
-
 /home/dry/desktop/cpp/dcompiler/headers/asmgen.hpp:
 
-/usr/include/c++/13/bits/ostream_insert.h:
-
-/usr/include/c++/13/bits/parse_numbers.h:
-
-/usr/include/c++/13/bits/stl_heap.h:
+/usr/include/c++/13/bits/cxxabi_forced.h:
 
 /usr/include/c++/13/iosfwd:
 
@@ -646,10 +618,6 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
 
 /usr/include/c++/13/bits/shared_ptr.h:
-
-/usr/include/c++/13/bits/stringfwd.h:
-
-/usr/include/c++/13/bits/uniform_int_dist.h:
 
 /usr/include/c++/13/ratio:
 
@@ -727,9 +695,9 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/bits/fs_path.h:
 
-/usr/include/c++/13/bits/stl_pair.h:
-
 /usr/include/c++/13/bits/charconv.h:
+
+/usr/include/c++/13/bits/stl_pair.h:
 
 /usr/include/c++/13/cstdio:
 
@@ -743,8 +711,6 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/ext/atomicity.h:
 
-/usr/include/c++/13/pstl/glue_algorithm_defs.h:
-
 /usr/include/c++/13/ext/concurrence.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
@@ -755,6 +721,8 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 
 /usr/include/c++/13/ext/type_traits.h:
 
+/usr/include/c++/13/iostream:
+
 /usr/include/c++/13/initializer_list:
 
 /usr/include/c++/13/bits/postypes.h:
@@ -764,3 +732,11 @@ CMakeFiles/eggo.dir/src/eggo.cpp.o: /home/dry/desktop/cpp/dcompiler/src/eggo.cpp
 /usr/include/c++/13/bits/uses_allocator.h:
 
 /usr/include/c++/13/iomanip:
+
+/usr/include/c++/13/istream:
+
+/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
+
+/usr/include/c++/13/bits/refwrap.h:
+
+/usr/include/c++/13/map:

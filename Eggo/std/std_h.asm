@@ -64,6 +64,8 @@ std_len:
 global std_print_int
 
 std_print_int:
+  push rcx
+
   mov rax, rdi
 
   xor rcx, rcx
@@ -109,6 +111,8 @@ std_print_int:
 .done_rev:
   lea rdi, buf
   call std_print_string
+
+  pop rcx
 
   ret
 

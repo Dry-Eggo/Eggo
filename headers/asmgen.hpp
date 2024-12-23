@@ -2,9 +2,10 @@
 
 #include "eggoLog.hpp"
 #include "token.hpp"
-#include <algorithm>
+//#include <algorithm>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -26,6 +27,7 @@ public:
   std::map<Token, std::vector<Var>> varScopes;
   std::vector<std::string> queue;
   size_t currOffset = 1;
+  size_t for_count = 0;
   std::stringstream TEXT, BSS, DATA, FUNC;
 
   inline void push(Var v)
@@ -55,12 +57,28 @@ public:
     TEXT << "global _start\n";
     TEXT << "\nextern std_terminate_process\nextern std_print_string\nextern std_flush\nextern std_print_int\nextern std_copy\n";
     TEXT << "\n_start:\n";
-    TEXT << "\n\n\tmov rbp, rsp\n";
+    TEXT << "\n\n\tmov rbp, rsp\n\tcall main\n";
 
     Logger::Info("Generating Asm");
     Logger::Info("Program Size : %d", m_program.stmt.size());
     
     generate(m_program.stmt, TEXT, TEXT,varStack);
+
+    bool is_good = false;
+
+    for(auto f : funcStack)
+    {
+      if (f.identifier.value.value() == "main") {
+        is_good = true;
+        break;
+      }
+    }
+
+    if(!is_good)
+    {
+      printf("\nmain function not present\n");
+      exit(1);
+    }
 
     out_asm << BSS.str();
     out_asm << DATA.str();
@@ -164,13 +182,14 @@ public:
           std::vector<Var> scope;
 
           gen->TEXT << "\n\tmov rcx, " << f.startValue.value.value() << "\n";
-          gen->TEXT << "for:\n";
+          gen->TEXT << "for"<< gen->for_count <<":\n";
           gen->TEXT << "\tcmp rcx, " << f.targetValue.value.value() << "\n";
-          gen->TEXT << "\tjge for_end\n";
-          gen->TEXT << "\tinc rcx\n";
+          gen->TEXT << "\tjge for" << gen->for_count << "_end\n";
+          gen->TEXT << "\tadd rcx, " << f.incValue.value.value() << "\n";
           gen->generate(f.body, gen->TEXT, gen->TEXT, scope);
-          gen->TEXT << "\tjmp for\n";
-          gen->TEXT << "\nfor_end:\n";
+          gen->TEXT << "\tjmp for"<< gen->for_count <<"\n";
+          gen->TEXT << "\nfor"<< gen->for_count << "_end:\n";
+          gen->for_count++;
 
           //gen->varScopes[f.identifier] = scope;
           
