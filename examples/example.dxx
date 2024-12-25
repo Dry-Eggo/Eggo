@@ -8,7 +8,7 @@
 
 !
 
-mk compiler_name : int = 10;  #! the mk keyword is used to declare or define variables
+mk compiler_name : str = "Eggo";  #! the mk keyword is used to declare or define variables
 mk ln : int = 20;
 mk ls : int = 19;
 mk lh : str = "h";
@@ -18,36 +18,24 @@ mkf foo(msg : str)
 
   #! mkf is a variant of the mk keyword that is used for functions
   #! ----------- do something ------------ 
-  call std_print_string;  #! "call" is used to call std_h functions. to not be used by users !!!!!
-  call std_flush;
+  call std_print_string  #! "call" is used to call std_h functions. to not be used by users !!!!!
+  call std_flush
 
 };
 
 mkf main()
 {
+  mk end : str = "END";
+  foo(compiler_name);
 
-};
-
-foo(compiler_name);
-
-for(i : int = 0; i  < 10; i+=1)
-{
-  #! traditional for loop
-
-  foo(compiler_name); #! call functions inside
-
-
-};
-
-foo(compiler_name);
-
-for(j : int = 1; j < 20; j+=1)
-{
-  #! multiple for loops
+  for(i : int = 0; i  < 10; i+=1)
+  {
+    #! traditional for loop
   
+    foo(compiler_name); #! call functions inside
+  };
+
+  foo(end);
 };
 
-foo(compiler_name);  #! call this function to do something
-
-#! this line is a comment. will be ignored by compiler
 

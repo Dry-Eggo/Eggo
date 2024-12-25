@@ -3,6 +3,8 @@ section .bss
 
 section .data
 
+	name db "Eggo", 0
+
 section .text
 global _start
 
@@ -18,25 +20,15 @@ _start:
 	mov rbp, rsp
 	call main
 
-	mov rdi, 0
-	call std_terminate_process
-
-terminate:
-
-	mov rbp, rsp
-
-	mov [rbp -8], rdi
-
-	call std_terminate_process
-	ret
+	extern std_print_string
 
 main:
 
 	mov rbp, rsp
 
-	mov rdi, 40
+	call std_print_string
 
-	call terminate
-	ret
+	mov rdi, 0
+	call std_terminate_process
 
 section .note.GNU-stack

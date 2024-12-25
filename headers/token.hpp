@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdarg>
 #include <cstddef>
 #include <optional>
 #include <sstream>
@@ -7,11 +8,22 @@
 #include <variant>
 #include <vector>
 
-
 enum errType {
-  ex_Delimiter, ex_Expression, ex_Integer, ex_Type,
-  ex_Operator, ex_Oparen, ex_Obrace, ex_Cparen, ex_Cbrace,
-  ms_Type, ms_TypeDef, un_Type, ex_Func, ms_Param, ms_Scope,
+  ex_Delimiter,
+  ex_Expression,
+  ex_Integer,
+  ex_Type,
+  ex_Operator,
+  ex_Oparen,
+  ex_Obrace,
+  ex_Cparen,
+  ex_Cbrace,
+  ms_Type,
+  ms_TypeDef,
+  un_Type,
+  ex_Func,
+  ms_Param,
+  ms_Scope,
 };
 
 struct Error {
@@ -19,31 +31,49 @@ struct Error {
   int line;
 };
 
-enum TokenType
-{
-    SEMI, INT_LIT, OPAREN, CPAREN,
-    IDENT, EXIT, MK, ASSIGN, STRING_LIT,
-    TYPE_DEC, TYPE, FOR, ADD_EQU, LTH,
-    CBRACE, OBRACE, GTH, LTH_EQU, GTH_EQU,
-    FUNC, CALL, eof,
+enum TokenType {
+  SEMI,
+  INT_LIT,
+  OPAREN,
+  CPAREN,
+  IDENT,
+  EXIT,
+  MK,
+  ASSIGN,
+  STRING_LIT,
+  TYPE_DEC,
+  TYPE,
+  FOR,
+  ADD_EQU,
+  LTH,
+  N_EQU,
+  CBRACE,
+  OBRACE,
+  GTH,
+  LTH_EQU,
+  GTH_EQU,
+  FUNC,
+  CALL,
+  eof,
+  ADD,
+  SUB,
+  DIV,
+  MUL,
+  EXTERN
 
 };
 
 enum DataType {
-  STR, INT,
+  STR,
+  INT,
 };
 
-struct Token 
-{
+struct Token {
   std::optional<std::string> value;
   TokenType type;
   int line;
 };
 
-struct NodeCallStmt
-{
-  Token std_lib_value;
-};
 
 struct NodeInt {
   Token value;
@@ -52,7 +82,6 @@ struct NodeInt {
 struct NodeExpr {
 
   std::variant<Token, NodeInt> var;
-  
 };
 
 struct NodeReStmt {
@@ -81,11 +110,17 @@ struct NodeForStmt {
   std::vector<NodeStmts> body;
 };
 
-struct NodeParam
-{
+struct Var {
+  Token name;
+  size_t stackOffset;
+  Token value;
+};
+
+struct NodeParam {
   Token identifier;
   DataType type;
   Token value;
+  Var toVar() { return Var{.name = identifier, .value = value}; }
 };
 
 struct NodeFuncStmt {
@@ -95,31 +130,34 @@ struct NodeFuncStmt {
   Token identifier;
 };
 
-struct NodeFuncCall
-{
+struct NodeFuncCall {
   Token identifier;
   std::vector<NodeParam> params;
   size_t param_count = 0;
 };
 
+struct NodeExtrnStmt {
+  Token identifier;
+  std::vector<NodeParam> param;
+  size_t param_count = 0;
+};
+
+struct NodeCallStmt {
+  Token std_lib_value;
+  std::vector<NodeParam> params;
+};
+
 struct NodeStmts {
-  std::variant<NodeExitStmt, NodeMkStmt,NodeReStmt, NodeForStmt, NodeFuncStmt, NodeFuncCall, NodeCallStmt> var;
+  std::variant<NodeExitStmt, NodeMkStmt, NodeReStmt, NodeForStmt, NodeFuncStmt,
+               NodeFuncCall, NodeCallStmt, NodeExtrnStmt>
+      var;
 };
 
 struct NodeProg {
   std::vector<NodeStmts> stmt;
 };
 
-
-struct Var
-{
-  Token name;
-  size_t stackOffset;
-  Token value;
-};
-
-struct GenPrompt
-{
+struct GenPrompt {
   std::vector<NodeStmts> stmts;
   std::stringstream ss;
   std::vector<Var> scope;

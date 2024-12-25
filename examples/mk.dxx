@@ -1,11 +1,7 @@
-mkf terminate(code : int)
-{
-  call std_terminate_process
-}
+dmk std_print_string(msg : str);
 
 mkf main()
 {
-  
-  terminate(40);
-  
+	mk name : str = "Eggo";
+	call std_print_string(name);
 };

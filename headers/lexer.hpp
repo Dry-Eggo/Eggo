@@ -53,7 +53,7 @@ private:
   std::string m_srcPath;
 
   size_t m_index = 0;
-  int cuurLine = 1;
+  int curline = 1;
 
 
   inline std::optional<char> peek(int i = 0)
@@ -87,35 +87,39 @@ private:
           
           if (buf == "exit")
           {
-            tokens.push_back({.type = TokenType::EXIT, .line = cuurLine});
+            tokens.push_back({.type = TokenType::EXIT, .line = curline});
           }
 
           else if(buf == "mk")
           {
-            tokens.push_back({.type = TokenType::MK, .line=cuurLine});
+            tokens.push_back({.type = TokenType::MK, .line=curline});
           }
 
           else if (buf == "int") 
           {
-            tokens.push_back({.value = buf,.type = TokenType::TYPE, .line = cuurLine});
+            tokens.push_back({.value = buf,.type = TokenType::TYPE, .line = curline});
           }
 
           else if (buf == "str") {
-            tokens.push_back({.value = buf, .type = TokenType::TYPE, .line = cuurLine});
+            tokens.push_back({.value = buf, .type = TokenType::TYPE, .line = curline});
           }
 
           else if (buf == "for") {
-            tokens.push_back({.type = TokenType::FOR, .line = cuurLine});
+            tokens.push_back({.type = TokenType::FOR, .line = curline});
           }
           else if (buf == "mkf") {
-            tokens.push_back({.type = TokenType::FUNC, .line = cuurLine});
+            tokens.push_back({.type = TokenType::FUNC, .line = curline});
           }
           else if (buf == "call") {
-            tokens.push_back({.type = TokenType::CALL, .line = cuurLine});
+            tokens.push_back({.type = TokenType::CALL, .line = curline});
           }
+		  else if (buf == "dmk")
+		  {
+			  tokens.push_back({.type = TokenType::EXTERN, .line = curline});
+		  }
 
           else {
-            tokens.push_back({.value = buf,.type = TokenType::IDENT, .line = cuurLine});
+            tokens.push_back({.value = buf,.type = TokenType::IDENT, .line = curline});
           }
 
           buf.clear();
@@ -140,7 +144,7 @@ private:
           buf.push_back(consume());
         }
 
-        tokens.push_back({.value = buf, .type = TokenType::STRING_LIT, .line = cuurLine});
+        tokens.push_back({.value = buf, .type = TokenType::STRING_LIT, .line = curline});
         Logger::Info("Buf : %s", buf.c_str());
         buf.clear();
       }
@@ -158,7 +162,7 @@ private:
           while (peek().value() != '!') {
             consume();
             if(peek().value() == '\n')
-              cuurLine++;
+              curline++;
           }
           consume();
         }
@@ -173,59 +177,83 @@ private:
             buf.push_back(consume());
         }
         Logger::Info("Parse Token : %s", buf.c_str());
-        tokens.push_back({ .value = buf,.type = TokenType::INT_LIT, .line = cuurLine});
+        tokens.push_back({ .value = buf,.type = TokenType::INT_LIT, .line = curline});
         buf.clear();
       }
 
       if(peek().value() == '(')
       {
         consume();
-        tokens.push_back({.type = TokenType::OPAREN, .line = cuurLine});
+        tokens.push_back({.type = TokenType::OPAREN, .line = curline});
         Logger::Info("Parse Token : '('");
       }
 
       if(peek().value() == ':')
       {
         consume();
-        tokens.push_back({.type = TokenType::TYPE_DEC, .line = cuurLine});
+        tokens.push_back({.type = TokenType::TYPE_DEC, .line = curline});
       }
 
       if(peek().value() == ')')
       {
         consume();
-        tokens.push_back({.type = TokenType::CPAREN, .line = cuurLine});
+        tokens.push_back({.type = TokenType::CPAREN, .line = curline});
       }
       if (peek().value() == ';')
       {
         consume();
-        tokens.push_back({.type = TokenType::SEMI, .line = cuurLine});
-        //printf("Found semi at line : %d\n", cuurLine);
+        tokens.push_back({.type = TokenType::SEMI, .line = curline});
+        //printf("Found semi at line : %d\n", curline);
       }
-      if (peek().value() == '+' && peek(1).value() == '=') {
-        consume();
-        consume();
-        tokens.push_back({.type = TokenType::ADD_EQU, .line = cuurLine});
+      if (peek().value() == '+'){
+		 if(peek(1).has_value() && peek(1).value() == '=') {
+			consume();
+			consume();
+			tokens.push_back({.type = TokenType::ADD_EQU, .line = curline});
+		 }else{
+			 consume();
+		 	 tokens.push_back({.type = TokenType::ADD, .line = curline});
+		 }
       }
 
       if(peek().value() == '<')
       {
         consume();
-        tokens.push_back({.type = TokenType::LTH, .line = cuurLine});
+        tokens.push_back({.type = TokenType::LTH, .line = curline});
       }
+	  if(peek().value() == '>')
+	  {
+		  consume();
+		  tokens.push_back({.type = TokenType::GTH, .line = curline});
+	  }
 
-      if (peek().value() == '{') {
+	  if(peek().value() == '>')
+	  {
+		  if(peek(1).has_value() && peek(1).value() == '=')
+			  tokens.push_back({.type = TokenType::GTH, .line = curline});
+
+		  consume();
+		  consume();
+	  }
+	  
+	  if(peek().has_value() && peek().value() == '>')
+	  {
+		  consume();
+		  tokens.push_back({.type = TokenType::GTH, .line = curline});
+	  }
+      if (peek().has_value() && peek().value() == '{') {
         consume();
-        tokens.push_back({.type = TokenType::OBRACE, .line = cuurLine});
+        tokens.push_back({.type = TokenType::OBRACE, .line = curline});
       }
       if (peek().value() == '}') {
         consume();
-        tokens.push_back({.type = TokenType::CBRACE, .line = cuurLine});
+        tokens.push_back({.type = TokenType::CBRACE, .line = curline});
       }
 
       if (peek().value() == '=') 
       {
         consume();
-        tokens.push_back({.type = TokenType::ASSIGN, .line = cuurLine});
+        tokens.push_back({.type = TokenType::ASSIGN, .line = curline});
       }
       if (peek().value() == ',') {
         consume();
@@ -233,14 +261,35 @@ private:
       if(isspace(peek().value())) {
         if(peek().value() == '\n')
         {
-          cuurLine++;
+          curline++;
           //printf("Newline\n");
         }
         consume();
-      }      
+      }     
+	  //if(peek().value() == '+')
+	  //{
+		 // consume();
+		  //tokens.push_back({.type =  TokenType::ADD, .line = curline});
+	  //}
+	  if(peek().has_value() && peek().value() == '-')
+	  {
+		consume();
+		tokens.push_back({.type = TokenType::SUB, .line = curline});
+	  }
+	  else if(peek().has_value() && peek().value() == '*')
+	  {
+		 consume();
+		  tokens.push_back({.type = TokenType::MUL, .line = curline});
+		  printf("INFO : *\n");
+	  }
+	  else if(peek().has_value() && peek().value() == '/')
+	  {
+		consume();
+		  tokens.push_back({.type = TokenType::DIV, .line = curline});
+	  }
     }
-    
-    tokens.push_back({.type = TokenType::eof, .line = cuurLine});
+   	printf("End of Lexing\n"); 
+    tokens.push_back({.type = TokenType::eof, .line = curline});
     Logger::Info("Token Size : %d", tokens.size());
     Parser parse(tokens);
 
