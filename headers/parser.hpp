@@ -4,7 +4,9 @@
 #include "eggoLog.hpp"
 #include "token.hpp"
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -13,7 +15,7 @@
 class Parser {
 public:
   inline Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)) {
-    Logger::Info("Parsing");
+    Logger::Trace("Parsing");
     while (peek().has_value()) {
       // if(peek().value().type == TokenType::EXIT)
       //{
@@ -32,7 +34,7 @@ public:
         parse_extrn_stmt(stmts.stmt);
       }
       if (peek().value().type == TokenType::FOR) {
-        Logger::Info("Found For");
+        Logger::Trace("Found For");
         parse_for_stmt(stmts.stmt);
       }
       if (peek()->type == TokenType::FUNC) {
@@ -41,10 +43,17 @@ public:
       if (peek()->type == TokenType::CALL) {
         parse_call_stmt(stmts.stmt);
       }
+      if (peek()->type == TokenType::IF) {
+        parse_if_stmt(stmts.stmt);
+      }
+      if (peek()->type == TokenType::WHILE) {
+        parse_while_stmt(stmts.stmt);
+      }
       if (peek()->type == TokenType::eof) {
         break;
       } else {
         // consume();
+        //  e
       }
     }
 
@@ -72,33 +81,27 @@ private:
     consume(); // call
     if (peek().has_value() && peek()->type == TokenType::IDENT) {
       call.std_lib_value = consume();
-      //stmt.var = call;
-      //stmts.push_back(stmt);
-	  if(peek().has_value() && peek()->type == OPAREN)
-	  {
-		  consume();
+      // stmt.var = call;
+      // stmts.push_back(stmt);
+      if (peek().has_value() && peek()->type == OPAREN) {
+        consume();
 
-		  while(peek().has_value() && peek()->type != CPAREN)
-		  {
-			NodeParam param;
-			if(peek().has_value() && peek()->type == IDENT)
-			{
-				param.value = consume();
-			}
-			call.params.push_back(param);
-		  }
-		  if(peek().value().type == TokenType::CPAREN)
-		  {
-			  consume();
-			  if(peek().value().type == TokenType::SEMI)
-			  {
-				  consume();
-				  stmt.var = call;
-				  stmts.push_back(stmt);
-			  }		  
-		  }
-
-	  }
+        while (peek().has_value() && peek()->type != CPAREN) {
+          NodeParam param;
+          if (peek().has_value() && peek()->type == IDENT) {
+            param.value = consume();
+          }
+          call.params.push_back(param);
+        }
+        if (peek().value().type == TokenType::CPAREN) {
+          consume();
+          if (peek().value().type == TokenType::SEMI) {
+            consume();
+            stmt.var = call;
+            stmts.push_back(stmt);
+          }
+        }
+      }
     }
   }
 
@@ -106,48 +109,33 @@ private:
     NodeStmts stmt;
     NodeExitStmt exitstmt;
 
-    if (peek().value().type == TokenType::OPAREN) {
-      consume();
-      if (peek().has_value() && peek().value().type == TokenType::INT_LIT) {
-        NodeInt i = {.value = consume()};
-        exitstmt.expr.var = i;
-        if (peek().has_value() && peek().value().type == TokenType::CPAREN) {
-          consume();
-          if (peek().has_value() && peek().value().type == TokenType::SEMI) {
-            stmt.var = exitstmt;
-            stmts.stmt.push_back(stmt);
-          } else {
-            Logger::Error(
-                {.type = errType::ex_Delimiter, .line = peek(-1).value().line});
-            exit(1);
-          }
-        } else {
-          Logger::Error(
-              {.type = errType::ex_Cparen, .line = peek(-1).value().line});
-          exit(1);
-        }
-      } else if (peek().has_value() &&
-                 peek().value().type == TokenType::IDENT) {
-        exitstmt.expr.var = consume();
-        if (peek().has_value() && peek().value().type == TokenType::CPAREN) {
-          consume();
-          if (peek().has_value() && peek().value().type == TokenType::SEMI) {
-            stmt.var = exitstmt;
-            stmts.stmt.push_back(stmt);
-          } else {
-            Logger::Error(
-                {.type = errType::ex_Delimiter, .line = peek(-1).value().line});
-            exit(1);
-          }
-        } else {
-          Logger::Error({.type = errType::ex_Cparen, .line = peek(-1)->line});
-          exit(1);
-        }
-      }
-    } else {
-      Logger::Error({.type = errType::ex_Oparen, .line = peek(-1)->line});
-      exit(1);
-    }
+    /*if (peek().value().type == TokenType::OPAREN) {*/
+
+    /*             peek().value().type == TokenType::IDENT) {*/
+    /*    exitstmt.expr.var = consume();*/
+    /*    if (peek().has_value() && peek().value().type == TokenType::CPAREN)
+     * {*/
+    /*      consume();*/
+    /*      if (peek().has_value() && peek().value().type == TokenType::SEMI)
+     * {*/
+    /*        stmt.var = exitstmt;*/
+    /*        stmts.stmt.push_back(stmt);*/
+    /*      } else {*/
+    /*        Logger::Error({.type = errType::ex_Delimiter,*/
+    /*                       .line = peek(-1).value().line,*/
+    /*                       .col = peek(-1)->col});*/
+    /*        exit(1);*/
+    /*      }*/
+    /*    } else {*/
+    /*      Logger::Error({.type = errType::ex_Cparen, .line =
+     * peek(-1)->line});*/
+    /*      exit(1);*/
+    /*    }*/
+    /*  }*/
+    /*} else {*/
+    /*  Logger::Error({.type = errType::ex_Oparen, .line = peek(-1)->line});*/
+    /*  exit(1);*/
+    /*}*/
   }
 
   inline void parse_mk_stmt(std::vector<NodeStmts> &stmts) {
@@ -155,87 +143,36 @@ private:
     NodeStmts stmt;
     NodeMkStmt mkstmt;
     consume(); // discarding "MK" keyword
-    cc++;
-    Logger::Info("Parsing Make");
-    if (peek().has_value() && peek().value().type == TokenType::IDENT) {
+    Logger::Trace("Parsing Mk stmt");
+    if (peek().has_value() && peek()->type == TokenType::IDENT) {
       mkstmt.identifier = consume();
-      cc++;
-      if (peek().has_value() && peek().value().type == TokenType::TYPE_DEC) {
+      if (peek().has_value() && peek()->type == TokenType::TYPE_DEC) {
         consume();
-        cc++;
-        if (peek().has_value() && peek().value().type == TokenType::TYPE) {
-          if (peek().value().value.value() == "str") {
-            mkstmt.type = DataType::STR;
-          } else if (peek().value().value.value() == "int") {
-            mkstmt.type = DataType::INT;
-          } else {
-            Logger::Error({.type = un_Type, .line = peek(-1)->line});
-          }
-
+        if (peek().has_value() && peek()->type == TokenType::TYPE) {
+          Logger::Trace("Parsing Mk stmt type");
           consume();
-          cc++;
-          Logger::Info("Make is half way there");
-          if (peek().has_value() && peek().value().type == TokenType::ASSIGN) {
+          if (peek().has_value() && peek()->type == TokenType::ASSIGN) {
             consume();
-            cc++;
-            if (peek().has_value() &&
-                peek().value().type == TokenType::INT_LIT) {
-              mkstmt.value = parse_expression();
-              if (peek().has_value() &&
-                  peek().value().type == TokenType::SEMI) {
-                Logger::Info("Normal discard");
-                stmt.var = mkstmt;
-                stmts.push_back(stmt);
-                consume();
-                cc++;
-                return;
-              } else {
-                Logger::Error({.type = ex_Delimiter, .line = peek(-1)->line});
-                exit(-1);
-              }
-            } else if (peek().has_value() &&
-                           peek().value().type == TokenType::STRING_LIT ||
-                       peek()->type == IDENT) {
-              mkstmt.value = consume();
-              cc++;
-              if (peek().has_value() &&
-                  peek().value().type == TokenType::SEMI) {
-                Logger::Info("Normal Discard");
-                stmt.var = mkstmt;
-                stmts.push_back(stmt);
-                consume();
-                cc++;
-                return;
-              }
-            } else {
-              Logger::Error({.type = ex_Expression, .line = peek(-1)->line});
+            if (peek().has_value()) {
+              mkstmt.value =
+                  std::make_shared<NodeExpr>(parse_expression(stmts));
+              Logger::Trace("Parsed expression");
             }
-          } // else { TODO
-            // Logger::Error({.type = ex_Operator, .line = peek(-1)->line});
-          //}
-          else if (peek().has_value() &&
-                   peek().value().type == TokenType::SEMI) {
-            mkstmt.value.value = "undef";
-            consume();
-            cc++;
+            if (peek().has_value() && peek()->type == SEMI) {
+              consume();
+              printf("---\n");
+            }
             stmt.var = mkstmt;
             stmts.push_back(stmt);
-          } else {
-            Logger::Error({.type = ex_Delimiter, .line = peek(-1)->line});
-            exit(-1);
           }
-          if (peek()->type == TokenType::SEMI) {
-            Logger::Info("Fail safe Discard");
-            consume();
-            cc++;
-          }
-          Logger::Info("Consume Count : %d", cc);
         }
       }
     }
   }
 
-  inline void parse_re_assign_stmt(std::vector<NodeStmts> &stmts) {
+  inline NodeFuncCall parse_re_assign_stmt(std::vector<NodeStmts> &stmts,
+                                           bool push_back = true,
+                                           bool check = true) {
     NodeStmts stmt;
     NodeReStmt restmt;
 
@@ -246,9 +183,12 @@ private:
       if (peek().has_value() && peek().value().type == TokenType::INT_LIT ||
           peek().value().type == TokenType::IDENT) {
         if (peek()->type == INT_LIT)
-          restmt.new_value = parse_expression();
+          restmt.new_value =
+              std::make_shared<NodeExpr>(parse_expression(stmts));
         else
-          restmt.new_value = consume();
+          restmt.new_value =
+              std::make_shared<NodeExpr>(parse_expression(stmts));
+
         if (peek().has_value() && peek().value().type == TokenType::SEMI) {
           consume();
           stmt.var = restmt;
@@ -263,33 +203,36 @@ private:
         exit(1);
       }
     } else if (peek(1).has_value() && peek(1)->type == TokenType::OPAREN) {
-      Logger::Info("function call");
+      Logger::Trace("function call");
       NodeFuncCall fcall;
       int param_count = 0;
       fcall.identifier = consume();
       consume(); // opening parenthesis
       if (peek().has_value() && peek()->type != TokenType::CPAREN) {
-        Logger::Info("Entering Call parenthesis");
+        Logger::Trace("Entering Call parenthesis");
         while (peek().has_value() && peek()->type != TokenType::CPAREN) {
-          Logger::Info("Collection call Params");
+          Logger::Trace("Collection call Params");
           NodeParam param = {.value = consume()};
           fcall.params.push_back(param);
           param_count++;
         }
       }
       if (peek().has_value() && peek()->type == TokenType::CPAREN &&
-          peek(1).has_value() && peek(1)->type == TokenType::SEMI) {
+          peek(1).has_value()) {
         consume(); // )
-        if (peek()->type == SEMI) {
-          Logger::Info("Discard");
+        if (peek()->type == SEMI && !check) {
+          Logger::Trace("Discard");
           consume();
         } // ;
         fcall.param_count = param_count;
         stmt.var = fcall;
-        stmts.push_back(stmt);
-        Logger::Info("Done function call");
+        if (push_back)
+          stmts.push_back(stmt);
+        Logger::Trace("Done function call");
+        return fcall;
       }
     }
+    return {};
   }
 
   inline void parse_for_stmt(std::vector<NodeStmts> &stmts) {
@@ -297,7 +240,7 @@ private:
     NodeForStmt for_stmt;
     std::vector<NodeStmts> body;
     consume();
-    Logger::Info("Parsing For Loop");
+    Logger::Trace("Parsing For Loop");
     // -----------------  for (i : int = 0; i < 10; i += 1) ---------------
 
     if (peek().has_value() && peek()->type == OPAREN) {
@@ -353,7 +296,7 @@ private:
                                 if (peek().has_value() &&
                                     peek()->type == OBRACE) {
                                   consume();
-                                  Logger::Info("Parsing For body");
+                                  Logger::Trace("Parsing For body");
                                   while (peek().has_value() &&
                                          peek()->type != CBRACE) {
                                     switch (peek()->type) {
@@ -369,6 +312,9 @@ private:
                                     case FUNC:
                                       parse_func_stmt(for_stmt.body);
                                       break;
+                                    case CALL:
+                                      parse_call_stmt(for_stmt.body);
+                                      break;
                                     default:
                                       break;
                                     }
@@ -377,14 +323,14 @@ private:
                                   if (peek().has_value() &&
                                       peek()->type == CBRACE) {
                                     consume();
-                                    Logger::Info("Discard }");
+                                    Logger::Trace("Discard }");
                                     if (peek().has_value() &&
                                         peek()->type == SEMI) {
                                       consume();
-                                      Logger::Info("Discard ;");
+                                      Logger::Trace("Discard ;");
                                       stmt.var = for_stmt;
                                       stmts.push_back(stmt);
-                                      Logger::Info("For Loop End");
+                                      Logger::Trace("For Loop End");
                                     }
                                   }
                                 }
@@ -422,10 +368,10 @@ private:
   }
 
   inline void parse_func_stmt(std::vector<NodeStmts> &stmts) {
-    Logger::Info("Parsing Function");
+    Logger::Trace("Parsing Function");
     NodeStmts stmt;
     NodeFuncStmt func_stmt;
-    consume();
+    consume(); // dicarding mk keyword
     int param_count = 0;
     if (peek()->type == TokenType::IDENT)
       func_stmt.identifier = consume();
@@ -440,7 +386,7 @@ private:
             if (peek().has_value() && peek()->type == TokenType::TYPE_DEC) {
               consume();
               if (peek().has_value() && peek()->type == TokenType::TYPE) {
-                Logger::Info("Collecting Func params");
+                Logger::Trace("Collecting Func params");
                 if (peek()->value == "str") {
                   param.type = DataType::STR;
                 } else {
@@ -457,6 +403,23 @@ private:
       }
       if (peek()->type == CPAREN)
         consume(); // closing parenthesis
+                   //
+      if (peek().has_value() && peek()->type == TYPE_DEC) {
+        consume();
+        if (peek().has_value() && peek()->type == TYPE) {
+          Logger::Trace("%s ret type :: %s",
+                        func_stmt.identifier.value.value().c_str(),
+                        peek()->value->c_str());
+          func_stmt.has_ret = true;
+          if (peek().has_value() && peek()->value == "str") {
+            func_stmt.ret_type = DataType::STR;
+          } else if (peek().has_value() && peek()->value == "int") {
+            func_stmt.ret_type = DataType::INT;
+          }
+
+          consume();
+        }
+      }
       if (peek().has_value() && peek()->type == TokenType::OBRACE) {
         consume();
       }
@@ -466,20 +429,56 @@ private:
             parse_mk_stmt(func_stmt.body);
           } else if (peek()->type == TokenType::IDENT) {
             parse_re_assign_stmt(func_stmt.body);
-            Logger::Info("Found Nested func call");
+            Logger::Trace("Found Nested func call");
           } else if (peek()->type == TokenType::FOR) {
             parse_for_stmt(func_stmt.body);
-            Logger::Info("Found Nested For");
+            Logger::Trace("Found Nested For");
           } else if (peek()->type == TokenType::EXIT) {
             parse_exit_stmt(); // ------    out of support ------- //
           } else if (peek()->type == TokenType::FUNC) {
             parse_func_stmt(func_stmt.body);
           } else if (peek()->type == TokenType::CALL) {
             parse_call_stmt(func_stmt.body);
+          } else if (peek()->type == WHILE) {
+            parse_while_stmt(func_stmt.body);
+          } else if (peek()->type == IF) {
+            parse_if_stmt(func_stmt.body);
           } else if (peek()->type == CBRACE) {
             break;
-          }
-          // consume();
+          } else if (peek()->type == RET) {
+            Logger::Trace("Parsing ret value");
+            consume();
+            NodeRet ret;
+            switch (peek().value().type) {
+            case INT_LIT:
+              if (func_stmt.ret_type != DataType::INT) {
+                Logger::Error({.type = ms_Type,
+                               .line = peek(-1)->line,
+                               .col = peek(-1)->col});
+                exit(1);
+              }
+              break;
+            case STRING_LIT:
+              if (func_stmt.ret_type != DataType::STR) {
+                Logger::Error({.type = ms_Type,
+                               .line = peek(-1)->line,
+                               .col = peek(-1)->col});
+                exit(1);
+              }
+              break;
+            case IDENT:
+              break;
+
+            default:
+              break;
+            }
+            ret.value = consume();
+            printf("from Parser : ret value : %s\n",
+                   ret.value.value.value().c_str());
+            func_stmt.ret_value = ret;
+            if (peek().has_value() && peek()->type == SEMI)
+              consume();
+          } // consume();
         }
       }
       if (peek()->type == CBRACE) {
@@ -493,101 +492,62 @@ private:
       stmts.push_back(stmt);
     }
   }
-  inline Token parse_expression() {
-    int curline = peek()->line;
-    Logger::Info("Parsing Expression");
-    std::vector<std::string> expr;
-    /*   collecting values till semicolon is reached   */
-    while (peek().has_value() && peek()->type != TokenType::SEMI &&
-           peek().has_value()) {
-      if (peek()->type == TokenType::INT_LIT) {
-        expr.push_back(peek()->value.value());
-        consume();
-      }
-      if (peek()->type == TokenType::ADD) {
-        expr.push_back("+");
-        consume();
-      }
-      if (peek()->type == TokenType::SUB) {
-        expr.push_back("-");
-        consume();
-      }
-      if (peek()->type == TokenType::DIV) {
-        expr.push_back("/");
-        consume();
-      }
-      if (peek()->type == TokenType::MUL) {
-        expr.push_back("*");
-        consume();
-      }
+  inline NodeExpr parse_expression(std::vector<NodeStmts> &stmts) {
+    NodeExpr expr;
+    NodeStmts stmt;
+    // Parsing general Experession
+    if (peek().has_value() && peek()->type == TokenType::IDENT) {
+      expr.var = std::make_shared<NodeFuncCall>(
+          parse_re_assign_stmt(stmts, false, false));
+      Logger::Trace("found mk func-ret expr");
+    } else if (peek().has_value() && peek()->type == TokenType::INT_LIT) {
+      if (peek(1).has_value() && peek(1)->type != SEMI)
+        expr.var = std::make_shared<std::vector<NodeBinaryExpr>>(parse_bexpr());
+      else
+        expr.var = NodeInt{.value = consume()};
+    } else if (peek().has_value() && peek()->type == TokenType::STRING_LIT) {
+      expr.var = NodeString{.value = consume()};
+      Logger::Trace("Expr :: string_lit");
     }
-    Logger::Info("expr size : %d", expr.size());
-    //   multiplication
-    while (expr.size() != 1) {
+    Logger::Trace("done");
+    return expr;
+  }
+  std::vector<NodeBinaryExpr> parse_bexpr() {
+    std::vector<NodeBinaryExpr> b_expr;
+    NodeExpr expr;
+    Logger::Trace("Parsing BinaryExpr");
 
-      for (int i = 0; i < expr.size(); i++) {
-        if (expr.at(i) == "/") {
-          int rhs = stoi(expr.at(i + 1));
-          int lhs = stoi(expr.at(i - 1));
-
-          int result = lhs / rhs;
-
-          Logger::Info("Calculting addition result");
-          expr.at(i) = std::to_string(result);
-          expr.erase(expr.begin() + (i - 1));
-          expr.erase(expr.begin() + i);
+    NodeBinaryExpr ex;
+    bool lhs = true;
+    while (peek().has_value() && peek()->type != SEMI) {
+      if (peek().has_value() && peek()->type == INT_LIT) {
+        if (lhs) {
+          ex.lhs = {consume()};
+          lhs = false;
+        } else {
+          ex.rhs = {consume()};
+          lhs = true;
         }
-      }
-      for (int i = 0; i < expr.size(); i++) {
-        if (expr.at(i) == "*") {
-          int rhs = stoi(expr.at(i + 1));
-          int lhs = stoi(expr.at(i - 1));
+      } else {
 
-          int result = lhs * rhs;
-          expr.at(i) = std::to_string(result);
-          expr.erase(expr.begin() + i -
-                     1); // {1, 2, 3, 4, 5, 6} || i = 3 new = {1, 2, 4, 5, 6}
-          expr.erase(expr.begin() +
-                     i); // {1, 2, 4, 5, 6} || i = 3 new = {1, 2, 4, 6};
+        switch (peek().value().type) {
+        case TokenType::MUL:
+          ex.op = "*";
+          lhs = true;
+          break;
+        default:
+          break;
         }
+        consume();
       }
-      //  addition
-      for (int i = 0; i < expr.size(); i++) {
-        if (expr.at(i) == "+") {
-          int rhs = stoi(expr.at(i + 1));
-          int lhs = stoi(expr.at(i - 1));
-
-          int result = lhs + rhs;
-
-          Logger::Info("Calculting addition result");
-          expr.at(i) = std::to_string(result);
-          expr.erase(expr.begin() + (i - 1));
-          expr.erase(expr.begin() + i);
-        }
-      }
-
-      for (int i = 0; i < expr.size(); i++) {
-        if (expr.at(i) == "-") {
-          int rhs = stoi(expr.at(i + 1));
-          int lhs = stoi(expr.at(i - 1));
-
-          int result = lhs - rhs;
-
-          Logger::Info("Calculting addition result");
-          expr.at(i) = std::to_string(result);
-          expr.erase(expr.begin() + (i - 1));
-          expr.erase(expr.begin() + i);
-        }
-      }
+      b_expr.push_back(std::move(ex));
     }
-
-    Logger::Info("Done Parsing Expression");
-    return {.value = expr.at(0), .type = TokenType::INT_LIT, .line = curline};
+    return b_expr;
   }
   inline void parse_extrn_stmt(std::vector<NodeStmts> &stmts) {
     NodeExtrnStmt extrnStmt;
     NodeStmts stmt;
-	consume(); // dmk
+    consume(); // dmk
     if (peek().has_value() && peek()->type == TokenType::IDENT) {
       extrnStmt.identifier = consume();
       if (peek().has_value() && peek()->type == OPAREN) {
@@ -613,6 +573,133 @@ private:
           consume();
           stmt.var = extrnStmt;
           stmts.push_back(stmt);
+        }
+      }
+    }
+  }
+  inline void parse_while_stmt(std::vector<NodeStmts> &stmts) {
+
+    /* NodeStmts stmt; */
+    /* Logger::Trace("Parsing While"); */
+    /* consume(); // while */
+    /* if (peek().has_value() && peek()->type == OPAREN) { */
+    /*   consume(); */
+    /*   Logger::Trace("Checking While Conditions"); */
+    /*   while (peek().has_value() && peek()->type != CPAREN) { */
+    /*     NodeCmp cmp; */
+    /*     if (peek().has_value() && peek()->type == IDENT) { */
+    /*       if (peek(1).has_value() && peek(1)->type == LTH) { */
+    /*         cmp.lhs = consume(); */
+    /*         switch (peek().value().type) { */
+    /*         case LTH: */
+    /*           cmp.cmp_s = "<"; */
+    /*           break; */
+    /*         case GTH: */
+    /*           cmp.cmp_s = ">"; */
+    /*           break; */
+    /*         case N_EQU: */
+    /*           cmp.cmp_s = "!="; */
+    /*           break; */
+    /*         default: */
+    /*           break; */
+    /*         } */
+    /*         consume(); */
+    /*         if (peek().has_value() && peek()->type == INT_LIT) { */
+    /*           cmp.rhs = consume(); */
+    /*           while_Stmt.comparisons.push_back(cmp); */
+    /*         } */
+    /*       } */
+    /*     } */
+    /*   } */
+    /*   if (peek().has_value() && peek()->type == CPAREN) { */
+    /*     consume(); */
+    /*     if (peek().has_value() && peek()->type == OBRACE) { */
+    /*       consume(); */
+    /*       Logger::Trace("Parsing While Body"); */
+    /*       if (peek().has_value() && peek()->type == CBRACE) { */
+    /*         while (peek().has_value() && peek()->type != CBRACE) { */
+    /*           Logger::Trace("In the loop"); */
+    /*           switch (peek()->type) { */
+    /*           case MK: */
+    /*             parse_mk_stmt(while_Stmt.body); */
+    /*             break; */
+    /*           case FUNC: */
+    /*             parse_func_stmt(while_Stmt.body); */
+    /*             break; */
+    /*           case IDENT: */
+    /*             parse_re_assign_stmt(while_Stmt.body); */
+    /*             break; */
+    /*           case CALL: */
+    /*             parse_call_stmt(while_Stmt.body); */
+    /*             break; */
+    /*           case FOR: */
+    /*             parse_for_stmt(while_Stmt.body); */
+    /*             break; */
+    /*           case CPAREN: */
+    /*             break; */
+    /*           default: */
+    /*             Logger::Trace("undefined"); */
+    /*             break; */
+    /*           } */
+    /*         } */
+    /*         Logger::Trace("Done with while body"); */
+    /*         if (peek().has_value() && peek()->type == CBRACE) { */
+    /*           consume(); */
+    /*           if (peek().value().type == SEMI) { */
+    /*             consume(); */
+    /*             stmt.var = while_Stmt; */
+    /*             stmts.push_back(stmt); */
+    /*             Logger::Trace("Done With While"); */
+    /*           } */
+    /*         } */
+    /*       } */
+    /*     } */
+    /*   } */
+    /* } */
+    /* } */
+  }
+  void parse_if_stmt(std::vector<NodeStmts> &stmts) {
+    NodeIfStmt if_stmt;
+    NodeStmts stmt;
+
+    if (peek().has_value() && peek()->type == TokenType::IF) {
+      consume();
+      if (peek().has_value() && peek()->type == OPAREN) {
+        consume();
+        if_stmt.condition =
+            std::make_shared<NodeExpr>(parse_expression(if_stmt.trueBody));
+        if (peek().has_value() && peek()->type == CPAREN) {
+          consume();
+          if (peek().has_value() && peek()->type == OBRACE) {
+            consume();
+            while (peek().has_value() && peek()->type != CBRACE) {
+              switch (peek()->type) {
+              case MK:
+                parse_mk_stmt(if_stmt.trueBody);
+                break;
+              case FOR:
+                parse_for_stmt(if_stmt.trueBody);
+                break;
+
+              case IDENT:
+                parse_re_assign_stmt(if_stmt.trueBody);
+                break;
+              default:
+                printf(
+                    "Un supported or Invlaid Stmt\nTerminate with failure\n");
+                exit(-1);
+                break;
+              }
+            }
+            if (peek().has_value() && peek()->type == CBRACE) {
+              consume();
+              if (peek().value().type == SEMI) {
+                consume();
+                stmt.var = if_stmt;
+                stmts.push_back(stmt);
+              }
+            }
+          }
         }
       }
     }

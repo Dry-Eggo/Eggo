@@ -1,4 +1,4 @@
-
+#! bad code
 # ------------------------  ------------------------EGGO----------------------- ------------------------- !
  
 # 
@@ -12,7 +12,6 @@ mk compiler_name : str = "Eggo";  #! the mk keyword is used to declare or define
 mk ln : int = 20;
 mk ls : int = 19;
 mk lh : str = "h";
-
 mkf foo(msg : str)
 {
 

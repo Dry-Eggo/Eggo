@@ -3,6 +3,8 @@
 #include "eggoLog.hpp"
 #include "token.hpp"
 // #include <algorithm>
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -11,6 +13,8 @@
 #include <iostream>
 // #include <string>
 #include <map>
+#include <memory>
+#include <ostream>
 #include <sstream>
 // #include <utility>
 #include <string>
@@ -23,6 +27,7 @@ public:
   std::fstream out_asm;
   std::vector<Var> varStack;
   std::vector<NodeFuncStmt> funcStack;
+  bool main_ret = false;
 
   // ================== Scopes ======================= //
   std::map<std::string, std::vector<Var>> varScopes;
@@ -30,7 +35,7 @@ public:
 
   std::vector<std::string> queue;
   size_t currOffset = 1;
-  size_t for_count = 0;
+  size_t loop_count = 0;
   std::stringstream TEXT, BSS, DATA, FUNC, HEADER, MAIN;
 
   inline void push(Var v) {
@@ -59,12 +64,13 @@ public:
     HEADER << "\nsection .text\n";
     HEADER << "global _start\n";
     HEADER << "\nextern std_terminate_process\nextern std_print_string\nextern "
-              "std_flush\nextern std_print_int\nextern std_copy\n";
+              "std_flush\nextern std_print_int\nextern std_copy\nextern "
+              "std_clear_string\n";
     HEADER << "\n_start:\n";
     HEADER << "\n\n\tmov rbp, rsp\n\tcall main\n";
 
-    Logger::Info("Generating Asm");
-    Logger::Info("Program Size : %d", m_program.stmt.size());
+    Logger::Trace("Generating Asm");
+    Logger::Trace("Program Size : %d", m_program.stmt.size());
 
     generate(m_program.stmt, TEXT, TEXT, varStack);
 
@@ -78,7 +84,8 @@ public:
     }
 
     if (!is_good) {
-      printf("\nmain function not present\n");
+      printf("\nFatal : Unable to identify main entry point with label : "
+             "main\nterminated with failure\n");
       exit(1);
     }
 
@@ -93,12 +100,16 @@ public:
 
     out_asm << FUNC.str();
     out_asm << MAIN.str();
-    out_asm << "\n\tmov rdi, 0\n\tcall std_terminate_process\n";
+    if (!main_ret)
+      out_asm << "\n\tmov rdi, 0";
+
+    out_asm << "\n\tcall std_terminate_process\n";
     out_asm << "\nsection .note.GNU-stack";
     printf("DONE\n");
   }
 
   inline void changeScope(std::string name) {
+    std::cout << "Changin Scope to : " << name << std::endl;
     scope_stack.push_back(name);
     if (varScopes.find(name) == varScopes.end()) {
       varScopes[name] = {};
@@ -109,9 +120,12 @@ public:
     if (scope_stack.empty())
       return;
 
+    std::cout << "Scopes size : " << scope_stack.size() << std::endl;
     std::string cur_scope = scope_stack.back();
-    scope_stack.pop_back();
-
+    scope_stack.erase(
+        std::remove(scope_stack.begin(), scope_stack.end(), scope_stack.back()),
+        scope_stack.end());
+    std::cout << "Exiting : " << cur_scope << std::endl;
     varScopes.erase(cur_scope);
   }
 
@@ -125,110 +139,125 @@ public:
         std::stringstream *p_ss;
 
         void operator()(NodeExitStmt e) {
-          struct exprVisitor {
-            AsmGen *gen;
-            void operator()(NodeInt i) {
-              gen->TEXT << "\n\tmov rdi, " << i.value.value.value() << "\n";
-              gen->TEXT << "\tcall std_terminate_process\n";
-            }
-            void operator()(Token i) {
-              for (auto v : gen->varStack) {
-                if (i.type == TokenType::IDENT &&
-                    i.value.value() == v.name.value.value()) {
-                  gen->pop(v, "rdi");
-                  gen->TEXT << "\tcall std_terminate_process\n";
-                }
-              }
-            }
-          };
-          std::visit(exprVisitor{.gen = gen}, e.expr.var);
 
-          Logger::Info("Generating Exit statement");
+          /*   void operator()(NodeInt i) { */
+          /*     gen->TEXT << "\n\tmov rdi, " << i.value.value.value() << "\n";
+           */
+          /*     gen->TEXT << "\tcall std_terminate_process\n"; */
+          /*   } */
+          /*   void operator()(NodeBinaryExpr i) {} */
+          /* }; */
+          /* std::visit(exprVisitor{.gen = gen}, e.expr.var); */
+
+          /* Logger::Info("Generating Exit statement"); */
         }
 
         void operator()(NodeMkStmt m) {
-          Logger::Info("Generating Make statement");
-          Var v = {.name = m.identifier,
-                   .stackOffset = gen->currOffset,
-                   .value = m.value};
+          Logger::Trace("Generating Make statement");
+          Logger::Trace("from Make : current Scope : %s",
+                        gen->scope_stack.back().c_str());
+          struct mkVisitor {
+            Token *ident;
+            AsmGen *gen;
+            std::stringstream *p_ss;
+            NodeMkStmt pm;
+            std::string var_name =
+                gen->scope_stack.back() + "." + pm.identifier.value.value();
 
-          if (m.value.type == TokenType::STRING_LIT) {
-            gen->DATA << "\n\t" << m.identifier.value.value() << " db "
-                      << m.value.value.value() << ", 0\n";
-          } else if (m.value.type == TokenType::INT_LIT) {
-            gen->DATA << "\n\t" << m.identifier.value.value() << " dq "
-                      << m.value.value.value() << "\n";
-          } else if (m.value.type == IDENT) {
-            Logger::Info("Passing Ident to make");
-            bool found = false;
+            void operator()(NodeString s) {
+              gen->DATA << "\n\t" << var_name << " db " << s.value.value.value()
+                        << " ,0";
+              Var v;
+              v.name = {.value = var_name};
+              v.value = {.value = s.value.value.value()};
+              gen->varScopes[gen->scope_stack.back()].push_back(v);
+            }
 
-            for (auto v : gen->varScopes[gen->scope_stack.back()]) {
-              if (v.name.value.value() == m.value.value.value()) {
-                gen->DATA << "\n\t" << m.identifier.value.value() << " db "
-                          << v.value.value.value() << "\n";
-                found = true;
+            void operator()(NodeInt i) { Logger::Trace("FOunc make int"); }
+            void
+            operator()(const std::shared_ptr<std::vector<NodeBinaryExpr>> &b) {
+              Logger::Trace("expression time");
+              std::vector<std::string> expression;
+              Logger::Trace("SSize : %d", b->size());
+              for (int i = 0; i < b->size(); i++) {
+                expression.push_back(b->at(i).lhs.value.value.value());
+                expression.push_back(b->at(i).op);
+                if (b->at(i).rhs.value.value.has_value()) {
+                  expression.push_back(b->at(i).rhs.value.value.value());
+                }
+              }
+              printf("--!");
+              expression.erase(
+                  std::remove(expression.begin(), expression.end(), ""),
+                  expression.end());
+
+              Logger::Trace("expression size : %ld", expression.size());
+              for (int i = 0; i < expression.size(); i++) {
+                Logger::Trace("%s", expression.at(i).c_str());
               }
             }
-            if (!found) {
-              Logger::Error({.type = ex_Expression, .line = m.identifier.line});
+            void operator()(const std::shared_ptr<NodeFuncCall> &s) {
+              gen->BSS << "\n\t" << var_name << " resb 1024";
+              Logger::Trace("Found call : make ");
+              std::vector<NodeStmts> stmt;
+              stmt.push_back({.var = *s});
+              gen->generate(stmt, *p_ss, *p_ss,
+                            gen->varScopes[gen->scope_stack.back()]);
+              *p_ss << "\n\tmov rdi, rax";
+              *p_ss << "\n\tmov rsi, " << var_name;
+              *p_ss << "\n\tcall std_copy\n";
+              gen->varScopes[gen->scope_stack.back()].push_back(
+                  {.name = {.value = var_name}, .value = {.value = "rax"}});
             }
-          } else if (m.value.value.value() == "undef") {
-            if (m.type == DataType::STR)
-              gen->BSS << "\n\t" << m.identifier.value.value()
-                       << " resb 1024\n";
-            else if (m.type == DataType::INT) {
-              gen->BSS << "\n\t" << m.identifier.value.value() << " resb 1\n";
-            }
-          } else
-            gen->push(v);
-          printf(" -- %s\n", gen->scope_stack.back().c_str());
+            void operator()(NodeCmp &c) {}
+          };
 
-          gen->varScopes[gen->scope_stack.back()].push_back(v);
-          for (auto v : gen->varScopes[gen->scope_stack.back()]) {
-            printf(" :: %s\n", v.name.value.value().c_str());
-          }
+          std::visit(mkVisitor{&m.identifier, gen, p_ss, m}, m.value->var);
+          printf("done\n");
         }
 
         void operator()(NodeReStmt r) {
           bool found = false;
-          Logger::Info("Generate Re_Assign statement");
-          for (auto v : gen->varScopes[gen->scope_stack.back()]) {
-            if (v.name.value.value() == r.identifier.value.value()) {
-              found = true;
-              *p_ss << "\n\tpush rax";
-              *p_ss << "\n\tmov rax, [" << r.new_value.value.value() << "]";
-              *p_ss << "\n\tmov [" << v.name.value.value() << "], rax";
-              *p_ss << "\n\tpop rax\n";
-            }
-            if (found == false) {
-              Logger::Error({.type = ms_Scope, .line = r.identifier.line});
-            }
-          }
+          Logger::Trace("Generate Re_Assign statement");
+          /*for (auto v : gen->varScopes[gen->scope_stack.back()]) {*/
+          /*  if (v.name.value.value() == r.identifier.value.value()) {*/
+          /*    found = true;*/
+          /*    *p_ss << "\n\tpush rax";*/
+          /*    *p_ss << "\n\tmov rax, [" << r.new_value.value.value() <<
+           * "]";*/
+          /*    *p_ss << "\n\tmov [" << v.name.value.value() << "], rax";*/
+          /*    *p_ss << "\n\tpop rax\n";*/
+          /*  }*/
+          /*  if (found == false) {*/
+          /*    Logger::Error({.type = ms_Scope, .line =
+           * r.identifier.line});*/
+          /*  }*/
+          /*}*/
         }
 
         void operator()(NodeForStmt f) {
-          Logger::Info("Generating For statement");
+          Logger::Trace("Generating For statement");
 
-          Logger::Info("For Body size : %d", f.body.size());
+          Logger::Trace("For Body size : %d", f.body.size());
 
           std::vector<Var> scope;
-
+          std::string name("for" + std::to_string(gen->loop_count));
           *p_ss << "\n\tmov rcx, " << f.startValue.value.value() << "\n";
-          *p_ss << "for" << gen->for_count << ":\n";
+          *p_ss << "for" << gen->loop_count << ":\n";
           *p_ss << "\tcmp rcx, " << f.targetValue.value.value() << "\n";
-          *p_ss << "\tjge for" << gen->for_count << "_end\n";
+          *p_ss << "\tjge for" << gen->loop_count << "_end\n";
           *p_ss << "\tadd rcx, " << f.incValue.value.value() << "\n";
           gen->generate(f.body, gen->MAIN, *p_ss, scope);
-          *p_ss << "\tjmp for" << gen->for_count << "\n";
-          *p_ss << "\nfor" << gen->for_count << "_end:\n";
-          gen->for_count++;
+          *p_ss << "\tjmp for" << gen->loop_count << "\n";
+          *p_ss << "\n" << name << "_end:\n";
+          gen->loop_count++;
 
           gen->varScopes[f.identifier.value.value()] = scope;
         }
 
         void operator()(NodeFuncStmt f) {
-          Logger::Info("Generating Function");
-          Logger::Info("Function params : %d", f.param_count);
+          Logger::Trace("Generating Function");
+          Logger::Trace("Function params : %d", f.param_count);
 
           std::vector<Var> scope;
           std::stringstream temp;
@@ -240,87 +269,141 @@ public:
 
           gen->funcStack.push_back(f);
           temp << "\n" << f.identifier.value.value() << ":\n";
+          temp << "\n\tpush rbp\n";
           temp << "\n\tmov rbp, rsp\n";
+          // argument name uniqueness with current scope prefix
+          std::string param_name;
 
           for (int i = 0; i < f.param_count; i++) {
+            param_name = gen->scope_stack.back() + "." +
+                         f.params.at(i).identifier.value.value();
+            gen->BSS << "\n\t" << param_name << " resb 1024";
             switch (i) {
             case 0:
               temp << "\n\tmov [rbp -8], rdi\n";
-              scope.push_back({.name = f.params.at(i).identifier,
+              scope.push_back({.name = {.value = param_name},
                                .stackOffset = scope_offset++,
                                .value = f.params.at(i).value});
               break;
             case 1:
-              scope.push_back({.name = f.params.at(i).identifier,
+              scope.push_back({.name = {.value = param_name},
                                .stackOffset = scope_offset++,
                                .value = f.params.at(i).value});
               temp << "\n\tmov [rbp -16], rsi\n";
               break;
             case 2:
-              scope.push_back({.name = f.params.at(i).identifier,
+              scope.push_back({.name = {.value = param_name},
                                .stackOffset = scope_offset++,
                                .value = f.params.at(i).value});
               temp << "\n\tmov [rbp -24], rdx\n";
             default:
               break;
             }
+            f.params.at(i).identifier.value.value() = param_name.c_str();
           }
-          gen->generate(f.body, gen->MAIN, temp,
-                        scope); // stream for child statements
+          if (f.identifier.value.value() != "main")
+            gen->generate(f.body, gen->MAIN, temp,
+                          scope); // stream for child statements
+          else
+            gen->generate(f.body, gen->MAIN, temp, gen->varStack);
 
           // gen->queue.emplace_back(temp.str());
           // gen->queue.emplace_back(nest.str());
+          if (f.ret_value.value.value.has_value()) {
+            if (f.ret_value.value.type == TokenType::INT_LIT ||
+                f.ret_value.value.type == TokenType::STRING_LIT) {
+
+              if (f.identifier.value.value() == "main")
+                temp << "\n\tmov rdi, " << f.ret_value.value.value.value();
+              else {
+                if (f.ret_value.value.type == INT_LIT)
+                  temp << "\n\tmov rax, " << f.ret_value.value.value.value();
+                else
+                  temp << "\n\tmov rax, " << param_name;
+              }
+            } else {
+              temp << "\n\tmov rax, "
+                   << gen->scope_stack.back() + "." +
+                          f.ret_value.value.value.value();
+            }
+          }
+          gen->main_ret = true;
+          temp << "\n\tpop rbp\n";
+          for (int i = 0; i < f.param_count; i++) {
+            if (f.params.at(i).type == DataType::STR || 1) {
+              temp << "\n\tlea rdi, [" << param_name
+                   << "]\n\tmov rsi, 1024\n\tcall std_clear_string\n";
+            }
+          }
           if (f.identifier.value.value() == "main") {
             gen->MAIN << temp.str();
+            /*gen->varScopes["main"] = scope;*/
+            printf("size : %d", (int)gen->varScopes["main"].size());
           } else {
             temp << "\tret\n";
             gen->FUNC << temp.str();
+            gen->varScopes[f.identifier.value.value()] = scope;
           }
 
-          gen->varScopes[f.identifier.value.value()] = scope;
+          gen->exitScope();
         }
 
         void operator()(NodeFuncCall fc) {
           /* gen->changeScope(fc.identifier.value.value()); */
           bool found = false;
-          Logger::Info("Generating Function call");
-          Logger::Info("Function call Params : %d", fc.param_count);
-          printf(" -- %s\n", gen->scope_stack.back().c_str());
-          for (auto f : gen->funcStack) {
+          Logger::Trace("Generating Function call");
+          Logger::Trace("Function call Params : %d", fc.param_count);
 
+          printf(" -- %s size : %d\n", gen->scope_stack.back().c_str(),
+                 (int)gen->varScopes[gen->scope_stack.back()].size());
+          std::string param_name;
+          for (auto f : gen->funcStack) {
+            //  checking if function has been declared
             if (f.identifier.value.value() == fc.identifier.value.value()) {
+              // matching parameter count
               if (f.param_count != fc.param_count)
                 Logger::Error({.type = ms_Param, .line = fc.identifier.line});
               found = true;
-              if (f.params.size() != 0) {
+              if (f.params.size() != -1) {
+                // Generating parameters for function arguments
                 for (int i = 0; i < fc.params.size(); i++) {
                   bool found = false;
+                  param_name = gen->scope_stack.back() + "." +
+                               fc.params.at(i).value.value.value();
+                  printf("param : %s\n", param_name.c_str());
                   for (auto v : gen->varScopes[gen->scope_stack.back()]) {
-                    if (fc.params.at(i).value.value.has_value())
-                      printf("%s\n",
-                             fc.params.at(i).value.value.value().c_str());
-                    printf(" :: %s\n", v.name.value.value().c_str());
+                    printf(" >> %s\n",
+                           fc.params.at(i).value.value.value().c_str());
+                    printf("Scope Var Name :  %s\n",
+                           v.name.value.value().c_str());
                     if (fc.params.at(i).value.value.has_value() &&
-                        fc.params.at(i).value.value.value() ==
-                            v.name.value.value()) {
+                        param_name == v.name.value.value()) {
+                      Logger::Trace("From func call : found : %s",
+                                    v.name.value.value().c_str());
                       found = true;
                       break;
                     }
                   }
-                  if (fc.params.at(i).value.value.has_value() &&
-                      found == false) {
-                    printf(" %s Not found in currentScope\n",
-                           fc.params.at(i).value.value.value().c_str());
-                  }
+                  *p_ss << "\n\tmov rdi, " << param_name;
+                  *p_ss << "\n\tmov rsi, "
+                        << f.identifier.value.value() + "." +
+                               f.params.at(i).identifier.value.value();
+                  *p_ss << "\n\tcall std_copy\n";
                   if (i == 0) {
-                    *p_ss << "\n\tmov rdi, "
-                          << fc.params.at(i).value.value.value() << "\n";
+                    *p_ss << "\n\tmov rdi, " << param_name << "\n";
                   } else if (i == 1)
                     *p_ss << "\n\tmov rsi, "
                           << fc.params.at(i).value.value.value() << "\n";
                   else
                     *p_ss << "\n\tpush " << fc.params.at(i).value.value.value()
                           << "\n";
+
+                  if (fc.params.at(i).value.value.has_value() &&
+                      found == false) {
+                    printf(" %s Not found in currentScope\n",
+                           param_name.c_str());
+                    // exit(1);
+                  }
                 }
               }
               *p_ss << "\n\tcall " << fc.identifier.value.value() << "\n";
@@ -328,33 +411,122 @@ public:
             }
           }
           if (found == false) {
-            Logger::Error(
-                {.type = errType::ex_Func, .line = fc.identifier.line});
+            Logger::Error({.type = errType::ex_Func,
+                           .line = fc.identifier.line,
+                           .col = fc.identifier.col});
           }
         }
 
         void operator()(NodeCallStmt c) {
-          Logger::Info("Generating Call Stmt");
+          if (gen->varScopes.find(c.std_lib_value.value.value()) ==
+              gen->varScopes.end()) {
+            Logger::Error({.type = ms_Scope, .line = c.std_lib_value.line});
+          } else {
+            for (auto v : gen->varScopes[c.std_lib_value.value.value()]) {
+              printf(" :: %s\n", v.name.value.value().c_str());
+            }
+          }
+          Logger::Trace("Generating Call Stmt");
+          std::string param_name;
           for (int i = 0; i < c.params.size(); i++) {
+            param_name = gen->scope_stack.back() + "." +
+                         c.params.at(i).value.value.value();
             switch (i) {
             case 0:
-              *p_ss << "\n\tmov rdi, " << c.params.at(i).value.value.value();
+              *p_ss << "\n\tmov rdi, " << param_name;
               break;
             case 1:
-              *p_ss << "\n\tmov rsi, " << c.params.at(i).value.value.value();
+              *p_ss << "\n\tmov rsi, " << param_name;
               break;
             case 2:
-              *p_ss << "\n\tmov rdx, " << c.params.at(i).value.value.value();
+              *p_ss << "\n\tmov rdx, " << param_name;
               break;
             default:
-              *p_ss << "\n\tpush " << c.params.at(i).value.value.value();
+              *p_ss << "\n\tpush " << param_name;
               break;
             }
           }
           *p_ss << "\n\tcall " << c.std_lib_value.value.value() << "\n";
         }
         void operator()(NodeExtrnStmt e) {
+          std::vector<Var> scope;
+          std::string arg_name;
+          for (auto p : e.param) {
+            arg_name =
+                e.identifier.value.value() + "." + p.identifier.value.value();
+            Var v = {.name = {.value = arg_name}};
+            gen->BSS << "\n\t" << arg_name << " resb 1024";
+            scope.push_back(v);
+          }
           gen->HEADER << "\n\textern " << e.identifier.value.value() << "\n";
+          gen->varScopes[e.identifier.value.value()] = scope;
+        }
+        void operator()(NodeWhileStmt w) {
+
+          /* std::string name("while" + std::to_string(gen->loop_count++)); */
+          /* Logger::Trace("While Body size : %d", w.body.size()); */
+          /* *p_ss << "\n\tpush rcx"; */
+          /* for (auto c : w.comparisons) { */
+          /*   for (auto v : gen->varScopes[gen->scope_stack.back()]) { */
+          /*     if (c.lhs.value.value() == v.name.value.value()) { */
+          /*       *p_ss << "\n\tcmp " << v.value.value.value() << ", " */
+          /*             << c.rhs.value.value(); */
+          /*     } else */
+          /*       *p_ss << "\n\tcmp " << c.lhs.value.value() << ", " */
+          /*             << c.rhs.value.value(); */
+          /*   } */
+          /*   if (c.cmp_s == "<") { */
+          /*     *p_ss << "\n\tjl " << name; */
+          /*     *p_ss << "\n\tjg " << name << "_end"; */
+          /*   } */
+          /* } */
+          /* *p_ss << "\n\t" << name << ":"; */
+          /* gen->generate(w.body, gen->MAIN, *p_ss, scope); */
+          /* *p_ss << "\n\t" << name << "_end:"; */
+          /* *p_ss << "\n\tpop rcx"; */
+        }
+        void operator()(NodeIfStmt ifs) {
+          Logger::Trace("From if : Doing Work ...");
+
+          // main.if_0:
+          //        body
+          // main.if_0_else:
+          //        body
+          // main.if0_end:
+          //        rest of program;
+          std::string if_name = gen->scope_stack.back() + "." +
+                                ifs.identifier.value.value() +
+                                std::to_string(gen->loop_count++);
+
+          *p_ss << "\n" << if_name << ":";
+
+          struct ifVisit {
+            Token *ident;
+            AsmGen *gen;
+            std::stringstream *p_ss;
+            NodeIfStmt pm;
+
+            void operator()(NodeCmp &c) {
+              struct lhsv {
+                void operator()(NodeCmp c) {}
+                void operator()(NodeInt i) {}
+                void operator()(NodeString s) {}
+                void operator()(
+                    const std::shared_ptr<std::vector<NodeBinaryExpr>> &e) {}
+                void operator()(const std::shared_ptr<NodeFuncCall> &e) {}
+              };
+              struct rhsv {};
+
+              std::visit(lhsv{}, c.lhs->var);
+            }
+            void operator()(NodeInt i) {}
+            void operator()(NodeString s) {}
+            void operator()(const std::shared_ptr<NodeFuncCall> &e) {}
+            void
+            operator()(const std::shared_ptr<std::vector<NodeBinaryExpr>> &e) {}
+          };
+          std::visit(ifVisit{.gen = gen, .p_ss = p_ss, .pm = ifs},
+                     ifs.condition->var);
         }
       };
 

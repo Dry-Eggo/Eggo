@@ -2,6 +2,7 @@
 
 #include <cstdarg>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -28,7 +29,7 @@ enum errType {
 
 struct Error {
   errType type;
-  int line;
+  int line, col;
 };
 
 enum TokenType {
@@ -44,14 +45,18 @@ enum TokenType {
   TYPE_DEC,
   TYPE,
   FOR,
-  ADD_EQU,
-  LTH,
-  N_EQU,
+  ADD_EQU, // +=
+  LTH,     // <
+  N_EQU,   // !=
+  EQU,     // ==
+  SUB_EQU, // -=
+  MUL_EQU, // *=
+  DIV_EQU, // /=
   CBRACE,
   OBRACE,
-  GTH,
-  LTH_EQU,
-  GTH_EQU,
+  GTH,     // >
+  LTH_EQU, // <=
+  GTH_EQU, // >=
   FUNC,
   CALL,
   eof,
@@ -59,47 +64,59 @@ enum TokenType {
   SUB,
   DIV,
   MUL,
-  EXTERN
-
+  EXTERN,
+  WHILE,
+  RET,
+  IF,
+  ELSE
 };
 
 enum DataType {
   STR,
   INT,
+  BOOL, // int 0 and 1 ::: translates bools into a possible 0 or 1. 0 beign
+        // false, 1 beign true
 };
 
 struct Token {
   std::optional<std::string> value;
   TokenType type;
-  int line;
+  int line, col;
 };
-
 
 struct NodeInt {
   Token value;
 };
 
-struct NodeExpr {
-
-  std::variant<Token, NodeInt> var;
+struct NodeString {
+  Token value;
 };
+
+struct NodeBinaryExpr;
+struct NodeExpr;
 
 struct NodeReStmt {
   Token identifier;
-  Token new_value;
+  std::shared_ptr<NodeExpr> new_value;
 };
 
 struct NodeExitStmt {
-  NodeExpr expr;
+  std::shared_ptr<NodeExpr> expr;
 };
 
 struct NodeMkStmt {
   Token identifier;
   DataType type;
-  Token value;
+  std::shared_ptr<NodeExpr> value;
 };
 
 struct NodeStmts;
+
+struct NodeCmp {
+  std::shared_ptr<NodeExpr> lhs;
+  std::string cmp_s;
+  std::shared_ptr<NodeExpr> rhs;
+};
 
 struct NodeForStmt {
   Token identifier;
@@ -108,6 +125,18 @@ struct NodeForStmt {
   Token incValue;
 
   std::vector<NodeStmts> body;
+};
+
+struct NodeWhileStmt {
+  std::vector<NodeCmp> comparisons;
+  std::vector<NodeStmts> body;
+};
+
+struct NodeIfStmt {
+  Token identifier;
+  std::shared_ptr<NodeExpr> condition;
+  std::vector<NodeStmts> trueBody;
+  std::shared_ptr<std::vector<NodeStmts>> falseBody = nullptr;
 };
 
 struct Var {
@@ -123,11 +152,18 @@ struct NodeParam {
   Var toVar() { return Var{.name = identifier, .value = value}; }
 };
 
+struct NodeRet {
+  Token value;
+};
+
 struct NodeFuncStmt {
   std::vector<NodeParam> params;
   std::vector<NodeStmts> body;
+  DataType ret_type;
   size_t param_count = 0;
   Token identifier;
+  NodeRet ret_value;
+  bool has_ret = false;
 };
 
 struct NodeFuncCall {
@@ -147,9 +183,21 @@ struct NodeCallStmt {
   std::vector<NodeParam> params;
 };
 
+struct NodeExpr {
+  std::variant<std::shared_ptr<std::vector<NodeBinaryExpr>>, NodeInt,
+               NodeString, std::shared_ptr<NodeFuncCall>, NodeCmp>
+      var;
+};
+
+struct NodeBinaryExpr {
+  NodeInt lhs;
+  std::string op;
+  NodeInt rhs;
+};
 struct NodeStmts {
   std::variant<NodeExitStmt, NodeMkStmt, NodeReStmt, NodeForStmt, NodeFuncStmt,
-               NodeFuncCall, NodeCallStmt, NodeExtrnStmt>
+               NodeFuncCall, NodeCallStmt, NodeExtrnStmt, NodeWhileStmt,
+               NodeIfStmt>
       var;
 };
 

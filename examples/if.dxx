@@ -1,0 +1,12 @@
+
+
+mkf get() : int { ret 10; };
+
+mkf main() : int
+{
+	if(get())
+	{
+		mk code : int = 10;
+	};
+	ret 0;
+};

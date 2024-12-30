@@ -17,6 +17,7 @@ std_print_string:
   push rsi
   push rdx
   push rcx
+  push rax
 
   mov rsi, rdi
   xor rcx, rcx
@@ -34,6 +35,7 @@ length_found:
   mov rdx, rcx
   syscall
 
+  pop rax
   pop rcx
   pop rdx
   pop rsi
@@ -47,6 +49,9 @@ global std_len
 ; rax --- return value
 
 std_len:
+  push rax
+  push rsi
+
   mov rsi, rdi
 
   xor rax, rax   ; counter
@@ -57,6 +62,8 @@ std_len:
   inc rax
   jmp .beg
 .end:
+  pop rsi
+  pop rax
   ret
 
 ; ---------------------------------------------
@@ -121,8 +128,10 @@ std_print_int:
 global std_flush
 
 std_flush:
+  push rdi
   mov rdi, nl
   call std_print_string
+  pop rdi
   ret
 
 ; ------------------------------------------------
@@ -133,10 +142,12 @@ global std_copy
 ; rsi --- dst address
 
 std_copy:
+  push rax
+	push rcx
   xor rcx, rcx
 
 .loop:
-
+  
   mov al, [rdi + rcx]
   mov [rsi + rcx], al
 
@@ -147,8 +158,37 @@ std_copy:
   jmp .loop
 
 .done:
+	pop rcx
+  pop rax
   ret
 
+; ------------------------------------------------
+global std_clear_string
+
+; rdi --- src
+; rsi --- size of src
+std_clear_string:
+
+  push rax
+
+  test rdi, rdi
+  je .done
+
+  test rsi, rsi
+  jz .done
+
+.clear:
+  mov byte [rdi], 0
+
+  inc rdi
+  dec rsi
+
+  jnz .clear
+
+
+.done:
+  pop rax
+  ret
 
 ; ------------------------------------------------
 section .bss

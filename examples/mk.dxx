@@ -1,7 +1,34 @@
-dmk std_print_string(msg : str);
+extern std_print_string(string : str);
+extern std_copy(src : str, dst : str);
+extern std_flush();
+extern std_clear_string(buf : str, size : int);
 
-mkf main()
+mkf println(msg : str) : str
 {
-	mk name : str = "Eggo";
-	call std_print_string(name);
+	mk other : str = "another";
+	call std_print_string(msg);
+	call std_flush();
+	ret other;
 };
+
+mkf print(msg : str) 
+{
+	call std_print_string(msg);
+};
+
+
+mkf get() : str {
+
+	mk other : str = "other";
+	ret other;
+};
+
+mkf main() : int
+{
+	mk temp: str = "temp";
+	mk msg : str = get();
+	println(temp);
+	println(msg);
+ 	ret 0;
+};
+

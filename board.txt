@@ -1,26 +1,31 @@
-forStmt_tri_part{
-    init_Value;             // i : int = 0;
-    comparison_Value;       // i < 10;
-    increment_Value;        // i+= 1;
-}
-asm:
-    set values:  
-                 mov rcx, 0 
-                 mov rbx, 10
+--------- if statement ----------
 
-                 cmp rcx, rbx
-                 jg .loopLabelend
-
-
-                 inc rcx
-                 jmp .loopLabelstart
-    
-
-
----------------------------------
-
-forStmt_dub_part
+if( x== 2 )
 {
-    type_Value;             // i : int;
-    group_Value;            // arr_int : int[];
-}
+
+};
+
+
+
+token : if
+token : (
+
+token : expr : cmp : lhs : x | cmp_s : == | rhs : 2
+
+token : )
+
+token : trueBody : { ---> }
+
+token : ; | falsebody : null
+
+
+mov rcx, 1
+cmp rcx, 0
+
+jnz if0
+jz  if0e
+
+if0:
+	; -------- code
+if0e:
+	; -------- code

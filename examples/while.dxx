@@ -1,0 +1,7 @@
+mkf main() {
+	mk i : int = 0;
+	while(i < 10)
+	{
+	};
+};
+        
