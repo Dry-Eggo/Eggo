@@ -5,7 +5,7 @@ The bin/ directory might be a bit messy tho.
 Any suggestions will be appreciated(except for performance-related ones).
 Inspiration from  	www.youtube.com/@pixeled-yt
 
-Eggo's Intermediate Repreentation is x86-64 linux assembly.
+Eggo's Intermediate Representation is x86-64 linux assembly.
 
 ------Features------
 
