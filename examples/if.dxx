@@ -1,12 +1,25 @@
+extern std_print_string(src : str);
+extern std_flush();
 
 
 mkf get() : int { ret 10; };
 
+mkf get2() : int { ret 10;};
+
+mkf println(msg : str) 
+{
+	call std_print_string(msg);
+	call std_flush();
+};
+
 mkf main() : int
 {
-	if(get())
-	{
-		mk code : int = 10;
+	if(get() == get2()){
+		mk name : str = "In IF";
+		println(name);
+	} else {
+		mk text : str = "In Else";
+		println(text);
 	};
 	ret 0;
 };

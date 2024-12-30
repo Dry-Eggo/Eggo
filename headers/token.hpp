@@ -111,11 +111,12 @@ struct NodeMkStmt {
 };
 
 struct NodeStmts;
+struct NodeFuncCall;
 
 struct NodeCmp {
-  std::shared_ptr<NodeExpr> lhs;
+  std::variant<std::shared_ptr<NodeFuncCall>, NodeInt> lhs;
   std::string cmp_s;
-  std::shared_ptr<NodeExpr> rhs;
+  std::variant<std::shared_ptr<NodeFuncCall>, NodeInt> rhs;
 };
 
 struct NodeForStmt {
@@ -134,9 +135,10 @@ struct NodeWhileStmt {
 
 struct NodeIfStmt {
   Token identifier;
-  std::shared_ptr<NodeExpr> condition;
+  std::shared_ptr<NodeCmp> condition;
   std::vector<NodeStmts> trueBody;
-  std::shared_ptr<std::vector<NodeStmts>> falseBody = nullptr;
+  std::vector<NodeStmts> falseBody;
+  bool has_else = false;
 };
 
 struct Var {

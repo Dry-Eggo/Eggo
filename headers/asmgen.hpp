@@ -140,9 +140,9 @@ public:
 
         void operator()(NodeExitStmt e) {
           /* Out of commision for Now */
-  
+
           /* Replaced With std_terminate_process */
-          
+
           /*   void operator()(NodeInt i) { */
           /*     gen->TEXT << "\n\tmov rdi, " << i.value.value.value() << "\n";
            */
@@ -225,7 +225,7 @@ public:
 
           // Out of Commision for now
           // Changed Some Things. Requires Editing
-          
+
           /*for (auto v : gen->varScopes[gen->scope_stack.back()]) {*/
           /*  if (v.name.value.value() == r.identifier.value.value()) {*/
           /*    found = true;*/
@@ -471,7 +471,7 @@ public:
         void operator()(NodeWhileStmt w) {
 
           // Was never In Commission
-          
+
           /* std::string name("while" + std::to_string(gen->loop_count++)); */
           /* Logger::Trace("While Body size : %d", w.body.size()); */
           /* *p_ss << "\n\tpush rcx"; */
@@ -497,7 +497,7 @@ public:
         void operator()(NodeIfStmt ifs) {
 
           // My current goal. completed -- [x]
-          
+
           Logger::Trace("From if : Doing Work ...");
 
           // main.if_0:
@@ -506,39 +506,81 @@ public:
           //        body
           // main.if0_end:
           //        rest of program;
-          std::string if_name = gen->scope_stack.back() + "." +
-                                ifs.identifier.value.value() +
+
+          std::string if_name = gen->scope_stack.back() + ".if" +
                                 std::to_string(gen->loop_count++);
+          gen->changeScope(if_name);
 
-          *p_ss << "\n" << if_name << ":";
+          Logger::Trace("if identifier : %s", if_name.c_str());
 
-          struct ifVisit {
-            Token *ident;
+          struct lhsv {
             AsmGen *gen;
             std::stringstream *p_ss;
-            NodeIfStmt pm;
+            NodeIfStmt *pm;
+            void operator()(const std::shared_ptr<NodeFuncCall> &f) {
+              for (auto fs : gen->funcStack) {
+                printf("Matching %s : %s\n",
+                       f->identifier.value.value().c_str(),
+                       fs.identifier.value.value().c_str());
 
-            void operator()(NodeCmp &c) {
-              struct lhsv {
-                void operator()(NodeCmp c) {}
-                void operator()(NodeInt i) {}
-                void operator()(NodeString s) {}
-                void operator()(
-                    const std::shared_ptr<std::vector<NodeBinaryExpr>> &e) {}
-                void operator()(const std::shared_ptr<NodeFuncCall> &e) {}
-              };
-              struct rhsv {};
+                if (f->identifier.value.value() ==
+                    fs.identifier.value.value()) {
+                  std::vector<NodeStmts> stmt;
+                  stmt.push_back({.var = *f});
+                  gen->generate(stmt, *p_ss, *p_ss,
+                                gen->varScopes[gen->scope_stack.back()]);
+                  *p_ss << "\n\tmov r8, rax";
 
-              std::visit(lhsv{}, c.lhs->var);
+                  break;
+                }
+              }
             }
+
             void operator()(NodeInt i) {}
-            void operator()(NodeString s) {}
-            void operator()(const std::shared_ptr<NodeFuncCall> &e) {}
-            void
-            operator()(const std::shared_ptr<std::vector<NodeBinaryExpr>> &e) {}
           };
-          std::visit(ifVisit{.gen = gen, .p_ss = p_ss, .pm = ifs},
-                     ifs.condition->var);
+          struct rhsv {
+            AsmGen *gen;
+            std::stringstream *p_ss;
+            NodeIfStmt *pm;
+            void operator()(const std::shared_ptr<NodeFuncCall> &f) {
+              for (auto fs : gen->funcStack) {
+                printf("Matching %s : %s\n",
+                       f->identifier.value.value().c_str(),
+                       fs.identifier.value.value().c_str());
+
+                if (f->identifier.value.value() ==
+                    fs.identifier.value.value()) {
+                  std::vector<NodeStmts> stmt;
+                  stmt.push_back({.var = *f});
+                  gen->generate(stmt, *p_ss, *p_ss,
+                                gen->varScopes[gen->scope_stack.back()]);
+                  *p_ss << "\n\tmov r9, rax";
+
+                  break;
+                }
+              }
+            }
+
+            void operator()(NodeInt i) {}
+          };
+          // TODO replace with one visit
+          std::visit(lhsv{gen, p_ss, &ifs}, ifs.condition->lhs);
+          std::visit(rhsv{gen, p_ss, &ifs}, ifs.condition->rhs);
+
+          *p_ss << "\n\tcmp r8, r9\n\tje " << if_name
+                << "\n\tjne " + if_name + "else\n\t";
+          *p_ss << "\n" << if_name << ":";
+          gen->generate(ifs.trueBody, *p_ss, *p_ss,
+                        gen->varScopes[gen->scope_stack.back()]);
+
+          *p_ss << "\n\tjmp " + if_name + "end";
+          if (ifs.has_else) {
+            *p_ss << "\n\t" << if_name + "else:";
+            gen->generate(ifs.falseBody, *p_ss, *p_ss,
+                          gen->varScopes[gen->scope_stack.back()]);
+            *p_ss << "jmp " + if_name + "end";
+          }
+          *p_ss << "\n" + if_name + "end:";
         }
       };
 

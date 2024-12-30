@@ -116,6 +116,8 @@ private:
         } else if (buf == "if") {
           tokens.push_back(
               {.type = TokenType::IF, .line = curline, .col = column});
+        } else if (buf == "else") {
+          tokens.push_back({.type = ELSE, .line = curline, .col = column});
         }
 
         else {
@@ -248,7 +250,7 @@ private:
       if (peek().value() == '>') {
         if (peek(1).has_value() && peek(1).value() == '=')
           tokens.push_back(
-              {.type = TokenType::GTH, .line = curline, .col = column});
+              {.type = TokenType::GTH_EQU, .line = curline, .col = column});
 
         consume();
         consume();
@@ -281,6 +283,7 @@ private:
           column += 2;
           tokens.push_back(
               {.type = TokenType::EQU, .line = curline, .col = column});
+          Logger::Trace("Lexed Equ");
         } else {
           column++;
           tokens.push_back(

@@ -219,8 +219,9 @@ private:
       }
       if (peek().has_value() && peek()->type == TokenType::CPAREN &&
           peek(1).has_value()) {
+        Logger::Trace("No Params Were given");
         consume(); // )
-        if (peek()->type == SEMI && !check) {
+        if (peek()->type == SEMI && check) {
           Logger::Trace("Discard");
           consume();
         } // ;
@@ -667,11 +668,13 @@ private:
       if (peek().has_value() && peek()->type == OPAREN) {
         consume();
         if_stmt.condition =
-            std::make_shared<NodeExpr>(parse_expression(if_stmt.trueBody));
+            std::make_shared<NodeCmp>(parse_condition(if_stmt.trueBody));
+        printf("Done with condition\n");
         if (peek().has_value() && peek()->type == CPAREN) {
           consume();
           if (peek().has_value() && peek()->type == OBRACE) {
             consume();
+            printf("Parsing IF body\n");
             while (peek().has_value() && peek()->type != CBRACE) {
               switch (peek()->type) {
               case MK:
@@ -697,11 +700,87 @@ private:
                 consume();
                 stmt.var = if_stmt;
                 stmts.push_back(stmt);
+              } else {
+                if (peek().value().type == TokenType::ELSE) {
+                  consume();
+                  Logger::Trace("Parsing Else Block");
+                  if_stmt.has_else = true;
+                  if (peek().has_value() && peek()->type == OBRACE)
+                    consume();
+                  while (peek().has_value() && peek()->type != CBRACE) {
+                    switch (peek()->type) {
+                    case MK:
+                      parse_mk_stmt(if_stmt.falseBody);
+                      break;
+                    case FOR:
+                      parse_for_stmt(if_stmt.falseBody);
+                      break;
+
+                    case IDENT:
+                      parse_re_assign_stmt(if_stmt.falseBody);
+                      break;
+                    default:
+                      printf("Un supported or Invlaid Stmt\nTerminate with "
+                             "failure\n");
+                      exit(-1);
+                      break;
+                    }
+                  }
+                  if (peek().has_value() && peek()->type == CBRACE) {
+                    consume();
+                    if (peek().has_value() && peek()->type == SEMI) {
+                      consume();
+                      stmt.var = if_stmt;
+                      stmts.push_back(stmt);
+                    }
+                  }
+                }
               }
             }
+          } else {
+            printf("Fatal : expected Matching parenthesis\n");
+            exit(1);
           }
         }
       }
     }
   }
-};
+  NodeCmp parse_condition(std::vector<NodeStmts> &stmts) {
+    NodeCmp cmp;
+    if (peek().has_value() && peek()->type == INT_LIT) {
+      cmp.lhs = NodeInt{.value = consume()};
+    } else if (peek().has_value() && peek()->type == IDENT) {
+      cmp.lhs = std::make_shared<NodeFuncCall>(
+          parse_re_assign_stmt(stmts, false, false));
+
+      Logger::Trace("lhs is funccall");
+
+    } else {
+      printf("Fatal : Expected and Expression");
+      exit(1);
+    }
+
+    if (peek().has_value() && peek()->type == EQU) {
+      Logger::Trace("found equ");
+      cmp.cmp_s = "==";
+      consume();
+    }
+
+    if (peek().has_value() && peek()->type == INT_LIT) {
+      cmp.rhs = NodeInt{.value = consume()};
+    } else if (peek().has_value() && peek()->type == IDENT) {
+      cmp.rhs = std::make_shared<NodeFuncCall>(
+          parse_re_assign_stmt(stmts, false, false));
+
+      Logger::Trace("rhs is funccall");
+
+    } else {
+      printf("Fatal : Expected and Expression");
+      exit(1);
+    }
+
+    return cmp;
+  }
+}
+
+;

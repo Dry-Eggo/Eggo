@@ -1,0 +1,64 @@
+
+d.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <_start>:
+   0:	48 89 e5             	mov    rbp,rsp
+   3:	e8 46 00 00 00       	call   4e <main>
+
+0000000000000008 <get>:
+   8:	55                   	push   rbp
+   9:	48 89 e5             	mov    rbp,rsp
+   c:	b8 0a 00 00 00       	mov    eax,0xa
+  11:	5d                   	pop    rbp
+  12:	c3                   	ret
+
+0000000000000013 <get2>:
+  13:	55                   	push   rbp
+  14:	48 89 e5             	mov    rbp,rsp
+  17:	b8 14 00 00 00       	mov    eax,0x14
+  1c:	5d                   	pop    rbp
+  1d:	c3                   	ret
+
+000000000000001e <println>:
+  1e:	55                   	push   rbp
+  1f:	48 89 e5             	mov    rbp,rsp
+  22:	48 89 7d f8          	mov    QWORD PTR [rbp-0x8],rdi
+  26:	48 bf 00 00 00 00 00 	movabs rdi,0x0
+  2d:	00 00 00 
+  30:	e8 00 00 00 00       	call   35 <println+0x17>
+  35:	e8 00 00 00 00       	call   3a <println+0x1c>
+  3a:	5d                   	pop    rbp
+  3b:	48 8d 3c 25 00 00 00 	lea    rdi,ds:0x0
+  42:	00 
+  43:	be 00 04 00 00       	mov    esi,0x400
+  48:	e8 00 00 00 00       	call   4d <println+0x2f>
+  4d:	c3                   	ret
+
+000000000000004e <main>:
+  4e:	55                   	push   rbp
+  4f:	48 89 e5             	mov    rbp,rsp
+  52:	e8 b1 ff ff ff       	call   8 <get>
+  57:	49 89 c0             	mov    r8,rax
+  5a:	e8 b4 ff ff ff       	call   13 <get2>
+  5f:	49 89 c1             	mov    r9,rax
+  62:	4d 39 c8             	cmp    r8,r9
+  65:	74 02                	je     69 <main.if0>
+  67:	75 28                	jne    91 <main.if0end>
+
+0000000000000069 <main.if0>:
+  69:	48 bf 00 00 00 00 00 	movabs rdi,0x0
+  70:	00 00 00 
+  73:	48 be 00 00 00 00 00 	movabs rsi,0x0
+  7a:	00 00 00 
+  7d:	e8 00 00 00 00       	call   82 <main.if0+0x19>
+  82:	48 bf 00 00 00 00 00 	movabs rdi,0x0
+  89:	00 00 00 
+  8c:	e8 8d ff ff ff       	call   1e <println>
+
+0000000000000091 <main.if0end>:
+  91:	bf 00 00 00 00       	mov    edi,0x0
+  96:	5d                   	pop    rbp
+  97:	e8 00 00 00 00       	call   9c <main.if0end+0xb>
