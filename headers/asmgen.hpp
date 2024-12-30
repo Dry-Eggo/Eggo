@@ -139,7 +139,10 @@ public:
         std::stringstream *p_ss;
 
         void operator()(NodeExitStmt e) {
-
+          /* Out of commision for Now */
+  
+          /* Replaced With std_terminate_process */
+          
           /*   void operator()(NodeInt i) { */
           /*     gen->TEXT << "\n\tmov rdi, " << i.value.value.value() << "\n";
            */
@@ -219,6 +222,10 @@ public:
         void operator()(NodeReStmt r) {
           bool found = false;
           Logger::Trace("Generate Re_Assign statement");
+
+          // Out of Commision for now
+          // Changed Some Things. Requires Editing
+          
           /*for (auto v : gen->varScopes[gen->scope_stack.back()]) {*/
           /*  if (v.name.value.value() == r.identifier.value.value()) {*/
           /*    found = true;*/
@@ -463,6 +470,8 @@ public:
         }
         void operator()(NodeWhileStmt w) {
 
+          // Was never In Commission
+          
           /* std::string name("while" + std::to_string(gen->loop_count++)); */
           /* Logger::Trace("While Body size : %d", w.body.size()); */
           /* *p_ss << "\n\tpush rcx"; */
@@ -486,6 +495,9 @@ public:
           /* *p_ss << "\n\tpop rcx"; */
         }
         void operator()(NodeIfStmt ifs) {
+
+          // My current goal. completed -- [x]
+          
           Logger::Trace("From if : Doing Work ...");
 
           // main.if_0:
