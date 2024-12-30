@@ -17,7 +17,7 @@ status -- [Unfinished]
    Eggo supports two main type ["int", "str"] and a "still in development" one which are booleans. Types of variables 
    must be specified and is not inferred by the compiler.
 
-   mk age : int = 30;
+      mk age : int = 30;
    
 2] supports small functions as it is lacking in many features now. Functions are defined with the "mkf" keyword, short for
    "make function". Functions have return types which musn't be specified. default is null. argument types must be specified.
