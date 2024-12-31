@@ -10,6 +10,8 @@ Eggo's Intermediate Representation is x86-64 linux assembly.
 ------Features------
 
 Eggo utilizes a mnemonic-style syntax to make development smoother and feel alot like Vim or Emac
+
+
 Version 0.1
 status -- [Unfinished]
 
@@ -37,5 +39,7 @@ status -- [Unfinished]
     {
         ret 0;
     };
+
+ 4] If statments [Under Construction]...
 
     
