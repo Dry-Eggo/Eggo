@@ -1,45 +1,44 @@
 
-
 section .text
 global std_terminate_process
 
 ; rdi --- exit code
 
 std_terminate_process:
-  mov rax, 60
-  syscall
+mov rax, 60
+syscall
 
 
 global std_print_string
 
 std_print_string:
 
-  push rsi
-  push rdx
-  push rcx
-  push rax
+push rsi
+push rdx
+push rcx
+push rax
 
-  mov rsi, rdi
-  xor rcx, rcx
+mov rsi, rdi
+xor rcx, rcx
 
 find_length:
-  cmp byte [rsi + rcx], 0
-  je length_found
+cmp byte [rsi + rcx], 0
+je length_found
 
-  inc rcx
-  jmp find_length
+inc rcx
+jmp find_length
 
 length_found:
-  mov rax, 1
-  mov rdi, 1
-  mov rdx, rcx
-  syscall
+mov rax, 1
+mov rdi, 1
+mov rdx, rcx
+syscall
 
-  pop rax
-  pop rcx
-  pop rdx
-  pop rsi
-  ret
+pop rax
+pop rcx
+pop rdx
+pop rsi
+ret
 
 ; ---------------------------------------------
 
@@ -49,90 +48,76 @@ global std_len
 ; rax --- return value
 
 std_len:
-  push rax
-  push rsi
+push rax
+push rsi
 
-  mov rsi, rdi
+mov rsi, rdi
 
-  xor rax, rax   ; counter
+xor rax, rax   ; counter
 
 .beg:
-  cmp byte [rsi + rax], 0
-  je .end
-  inc rax
-  jmp .beg
+cmp byte [rsi + rax], 0
+je .end
+inc rax
+jmp .beg
 .end:
-  pop rsi
-  pop rax
-  ret
-
+pop rsi
+pop rax
+ret
 ; ---------------------------------------------
 
+section .text
 global std_print_int
 
+; --- rdi :: number to convert
+; --- std_print_int.value :: ret val
 std_print_int:
-  push rcx
-
-  mov rax, rdi
-
-  xor rcx, rcx
-
-  mov rsi, buf
-
-  test rax, rax
-  jns .convert
-  mov byte [rsi], '-'
-
-  neg rax
-  inc rsi
+	mov rax, rdi
+	mov rdi, std_print_int.value
+	xor rcx, rcx
 
 .convert:
-  mov rdx, 0
-  mov rbx, 10
-  div rbx
+	xor rdx, rdx
+	div dword [divisor]
+	add dl, 48
+	mov [rdi + rcx], dl
+	inc rcx
 
-  add dl, '0'
+	test eax, eax
+	jnz .convert
 
-  mov [rsi + rcx], dl
-  inc rcx
-  test rax, rax
-  jnz .convert
+	mov byte [rdi + rcx], 0		; Null Terminate , 0
+
+	lea rsi, std_print_int.value
+	lea rdi, [std_print_int.value + rcx -1]
+	xor rax, rax
 
 .reverse:
-  lea rdi, buf
-  lea rsi, [buf + rcx - 1]
+	cmp rsi, rdi
+	jge .done
 
-.rv_loop:
-  cmp rdi, rsi
-  jge .done_rev
+	mov al, [rsi]
+	mov bl, [rdi]
+	mov [rsi], bl
+	mov [rdi], al
 
-  mov al, [rdi]
-  mov bl, [rsi]
-  mov [rdi], bl
-  mov [rsi], al
-
-  inc rdi
-  dec rsi
-
-  jmp .rv_loop
-.done_rev:
-  lea rdi, buf
-  call std_print_string
-
-  pop rcx
-
-  ret
-
+	inc rsi
+	dec rdi
+	
+	jmp .reverse
+.done:	
+	lea rdi, std_print_int.value
+	call std_print_string
+	ret
 ; -----------------------------------------------
 
 global std_flush
-
 std_flush:
-  push rdi
-  mov rdi, nl
-  call std_print_string
-  pop rdi
-  ret
+push rdi
+mov rdi, nl
+call std_print_string
+pop rdi
+ret
 
 ; ------------------------------------------------
 
@@ -142,25 +127,25 @@ global std_copy
 ; rsi --- dst address
 
 std_copy:
-  push rax
-	push rcx
-  xor rcx, rcx
+push rax
+push rcx
+xor rcx, rcx
 
 .loop:
-  
-  mov al, [rdi + rcx]
-  mov [rsi + rcx], al
 
-  cmp al, 0
+mov al, [rdi + rcx]
+mov [rsi + rcx], al
 
-  je .done
-  inc rcx
-  jmp .loop
+cmp al, 0
+
+je .done
+inc rcx
+jmp .loop
 
 .done:
-	pop rcx
-  pop rax
-  ret
+pop rcx
+pop rax
+ret
 
 ; ------------------------------------------------
 global std_clear_string
@@ -169,32 +154,33 @@ global std_clear_string
 ; rsi --- size of src
 std_clear_string:
 
-  push rax
+push rax
 
-  test rdi, rdi
-  je .done
+test rdi, rdi
+je .done
 
-  test rsi, rsi
-  jz .done
+test rsi, rsi
+jz .done
 
 .clear:
-  mov byte [rdi], 0
+mov byte [rdi], 0
 
-  inc rdi
-  dec rsi
+inc rdi
+dec rsi
 
-  jnz .clear
+jnz .clear
 
 
 .done:
-  pop rax
-  ret
+pop rax
+ret
 
 ; ------------------------------------------------
 section .bss
-  buf resb 20
-
+buf resb 20
+std_print_int.value resb 32  ; Reserve space for a 32-byte buffer to store the string
 section .data
-  nl db 10
+nl db 10
+divisor dd 10
 
 section .note.GNU-stack

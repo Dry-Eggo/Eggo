@@ -68,7 +68,8 @@ enum TokenType {
   WHILE,
   RET,
   IF,
-  ELSE
+  ELSE,
+  R_PTR
 };
 
 enum DataType {
@@ -76,12 +77,14 @@ enum DataType {
   INT,
   BOOL, // int 0 and 1 ::: translates bools into a possible 0 or 1. 0 beign
         // false, 1 beign true
+  R_PTR_T,
 };
 
 struct Token {
   std::optional<std::string> value;
   TokenType type;
   int line, col;
+  bool is_ptr = false;
 };
 
 struct NodeInt {
@@ -145,6 +148,7 @@ struct Var {
   Token name;
   size_t stackOffset;
   Token value;
+  bool is_prt = false;
 };
 
 struct NodeParam {

@@ -76,6 +76,7 @@ private:
   inline Token consume() { return m_tokens.at(m_index++); }
 
   inline void parse_call_stmt(std::vector<NodeStmts> &stmts) {
+    Logger::Trace("Parsing Call Stmt");
     NodeStmts stmt;
     NodeCallStmt call;
     consume(); // call
@@ -88,9 +89,16 @@ private:
 
         while (peek().has_value() && peek()->type != CPAREN) {
           NodeParam param;
-          if (peek().has_value() && peek()->type == IDENT) {
-            param.value = consume();
-          }
+          Token tkn;
+          if (peek()->type == R_PTR) {
+            consume();
+            if (peek().has_value()) {
+              tkn = consume();
+              tkn.is_ptr = true;
+            }
+          } else
+            tkn = consume();
+          param.value = tkn;
           call.params.push_back(param);
         }
         if (peek().value().type == TokenType::CPAREN) {
@@ -212,7 +220,18 @@ private:
         Logger::Trace("Entering Call parenthesis");
         while (peek().has_value() && peek()->type != TokenType::CPAREN) {
           Logger::Trace("Collection call Params");
-          NodeParam param = {.value = consume()};
+          Token tkn;
+          if (peek()->type == R_PTR) {
+            Logger::Trace("From FOR : found pointer");
+            consume();
+            if (peek().has_value()) {
+              tkn = consume();
+              tkn.is_ptr = true;
+            }
+          } else {
+            tkn = consume();
+          }
+          NodeParam param = {.value = tkn};
           fcall.params.push_back(param);
           param_count++;
         }

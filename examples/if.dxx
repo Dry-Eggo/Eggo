@@ -1,10 +1,10 @@
 extern std_print_string(src : str);
 extern std_flush();
-
+extern std_print_int(val : int);
 
 mkf get() : int { ret 10; };
 
-mkf get2() : int { ret 10;};
+mkf get2() : int { ret 30;};
 
 mkf println(msg : str) 
 {
@@ -14,12 +14,21 @@ mkf println(msg : str)
 
 mkf main() : int
 {
-	if(get() == get2()){
-		mk name : str = "In IF";
+	if(10 == 1){
+		mk name : str = "In If";
 		println(name);
 	} else {
 		mk text : str = "In Else";
 		println(text);
+		for(i : int = 0; i < 10; i +=1)
+		{
+			mk label : str = "Current Number : ";
+			call std_print_string(label);
+			call std_print_int(%i);
+			call std_flush();
+		};
 	};
+
+
 	ret 0;
 };

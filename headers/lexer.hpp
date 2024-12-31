@@ -234,6 +234,13 @@ private:
         }
       }
 
+      if (peek().value() == '%') {
+        tokens.push_back(
+            {.type = TokenType::R_PTR, .line = curline, .col = column});
+        consume();
+        column++;
+      }
+
       if (peek().value() == '<') {
         consume();
         column++;

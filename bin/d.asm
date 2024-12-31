@@ -2,11 +2,14 @@
 section .bss
 
 	std_print_string.src resb 1024
+	std_print_int.val resb 1024
 	println.msg resb 1024
+	for1.i resb 1
 section .data
 
-	main.if0.name db "In IF" ,0
+	main.if0.name db "In If" ,0
 	main.if0.text db "In Else" ,0
+	for1.label db "Current Number : " ,0
 section .text
 global _start
 
@@ -27,6 +30,8 @@ _start:
 
 	extern std_flush
 
+	extern std_print_int
+
 get:
 
 	push rbp
@@ -43,7 +48,7 @@ get2:
 
 	mov rbp, rsp
 
-	mov rax, 10
+	mov rax, 30
 	pop rbp
 	ret
 
@@ -73,12 +78,8 @@ main:
 
 	mov rbp, rsp
 
-	call get
-
-	mov r8, rax
-	call get2
-
-	mov r9, rax
+	mov r8, 10
+	mov r9, 1
 	cmp r8, r9
 	je main.if0
 	jne main.if0else
@@ -101,6 +102,25 @@ main.if0:
 	mov rdi, main.if0.text
 
 	call println
+
+	mov dword [for1.i], 0
+for1:
+
+	mov eax, [for1.i]
+	cmp eax, 10
+	jge for1_end
+
+	mov rdi, for1.label
+	call std_print_string
+
+	mov rdi, [for1.i]
+	call std_print_int
+
+	call std_flush
+	add byte [for1.i], 1
+	jmp for1
+
+for1_end:
 jmp main.if0end
 main.if0end:
 	mov rdi, 0

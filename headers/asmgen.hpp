@@ -50,6 +50,12 @@ public:
     else
       TEXT << "\n\tmov " << reg << ", " << v.name.value.value() << "\n";
   }
+  void make(std::string name, std::string val) {
+    DATA << "\n\t" + name + " db " + val + ", 0";
+  }
+  void resb(std::string name, char *size) {
+    BSS << "\n\t" + name + " resb " + size;
+  }
 
   inline AsmGen(NodeProg program) : m_program(program) {
 
@@ -247,19 +253,31 @@ public:
 
           Logger::Trace("For Body size : %d", f.body.size());
 
-          std::vector<Var> scope;
           std::string name("for" + std::to_string(gen->loop_count));
-          *p_ss << "\n\tmov rcx, " << f.startValue.value.value() << "\n";
-          *p_ss << "for" << gen->loop_count << ":\n";
-          *p_ss << "\tcmp rcx, " << f.targetValue.value.value() << "\n";
+          gen->changeScope(name);
+          gen->resb(name + "." + f.identifier.value.value(), (char *)"1");
+          gen->varScopes[gen->scope_stack.back()].push_back(
+              {.name = {.value = "rcx"}, .value = {.value = "rcx"}});
+
+          // main loop
+          *p_ss << "\n\tmov dword [" + name + "." + f.identifier.value.value() +
+                       "], " + f.startValue.value.value();
+          *p_ss << "\nfor" << gen->loop_count << ":\n";
+          *p_ss << "\n\tmov eax, "
+                << "[" + name + "." + f.identifier.value.value() + "]" << "\n";
+          *p_ss << "\tcmp eax, " << f.targetValue.value.value() << "\n";
           *p_ss << "\tjge for" << gen->loop_count << "_end\n";
-          *p_ss << "\tadd rcx, " << f.incValue.value.value() << "\n";
-          gen->generate(f.body, gen->MAIN, *p_ss, scope);
+
+          gen->generate(f.body, gen->MAIN, *p_ss,
+                        gen->varScopes[gen->scope_stack.back()]);
+          *p_ss << "\tadd byte [" + name + "." + f.identifier.value.value() +
+                       "], "
+                << f.incValue.value.value() << "\n";
           *p_ss << "\tjmp for" << gen->loop_count << "\n";
           *p_ss << "\n" << name << "_end:\n";
           gen->loop_count++;
 
-          gen->varScopes[f.identifier.value.value()] = scope;
+          gen->exitScope();
         }
 
         void operator()(NodeFuncStmt f) {
@@ -436,11 +454,18 @@ public:
           Logger::Trace("Generating Call Stmt");
           std::string param_name;
           for (int i = 0; i < c.params.size(); i++) {
+            bool isptr = false;
             param_name = gen->scope_stack.back() + "." +
                          c.params.at(i).value.value.value();
+            if (c.params.at(i).value.is_ptr)
+              isptr = true;
             switch (i) {
             case 0:
-              *p_ss << "\n\tmov rdi, " << param_name;
+              if (isptr)
+                *p_ss << "\n\tmov rdi, [" << param_name + "]";
+              else
+
+                *p_ss << "\n\tmov rdi, " << param_name;
               break;
             case 1:
               *p_ss << "\n\tmov rsi, " << param_name;
@@ -536,7 +561,9 @@ public:
               }
             }
 
-            void operator()(NodeInt i) {}
+            void operator()(NodeInt i) {
+              *p_ss << "\n\tmov r8, " << i.value.value.value();
+            }
           };
           struct rhsv {
             AsmGen *gen;
@@ -561,7 +588,9 @@ public:
               }
             }
 
-            void operator()(NodeInt i) {}
+            void operator()(NodeInt i) {
+              *p_ss << "\n\tmov r9, " << i.value.value.value();
+            }
           };
           // TODO replace with one visit
           std::visit(lhsv{gen, p_ss, &ifs}, ifs.condition->lhs);
